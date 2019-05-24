@@ -23,11 +23,8 @@ double distance_measured[20];
 
 
 
-//BT syntax buffer iterator
-int bt_buffer_iterator = 0;
-int bt_read_int = 0;
+//BT variables
 String serial_buffer = String("");
-String comp_string = String("memes");
 
 char buffer[64];
 int d[5] = {};
@@ -46,7 +43,7 @@ double getCurrentAngle();
 int getFrontDistance();
 void correctTargetAngle(double& angle);
 void readFromBluetooth();
-void determineDrivingTendencyDirection(String bt_command);
+void handleBluetoothSerial(String bt_command);
 void engineTurn(int left_axis_power, int right_axis_power);
 void engineGoStraight(int both_axis_power);
 
@@ -100,25 +97,15 @@ void loop(void) {
   
   static double current_angle;
   static double target_angle;
-
-  //test
+  if(Serial1.available()) {
+    readFromBluetooth();
+    handleBluetoothSerial(serial_buffer);
+  }
   
   
-  /*
-  driving_mode = 2;
-  sprintf(buffer, "\n%f", getCurrentAngle());
-  Serial1.print(buffer);
-  delay(1000);
-  */
-  
-  //readFromBluetooth
-  readFromBluetooth();
-
   
   if (driving_mode == 0) {
     //tryb jazdy do przodu
-    //setPowerLevel(EngineSelector::Right, FORWARD_POWER);
-    //setPowerLevel(EngineSelector::Left, FORWARD_POWER);
     engineGoStraight(FORWARD_POWER);
     
     if (dist < OBSTACLE_DISTANCE) {
@@ -129,8 +116,6 @@ void loop(void) {
       front_obstruction_filter = 0;
     }
     if (front_obstruction_filter > 3) {
-      //setPowerLevel(EngineSelector::Right, 0);
-      //setPowerLevel(EngineSelector::Left, 0);
       engineGoStraight(0);
       
       Serial1.print("\n I see an obstacle before me");
@@ -154,16 +139,11 @@ void loop(void) {
   }
   else if(driving_mode == 1){
     //tryb obracania
-    //setPowerLevel(EngineSelector::Right, -TURNING_POWER);
-    //setPowerLevel(EngineSelector::Left, TURNING_POWER);
     engineTurn(TURNING_POWER, -TURNING_POWER);
 
     current_angle = getCurrentAngle();
     
     if(fabs(angleDifference(current_angle, target_angle)) < MAX_ANGLE_DIFFERENCE){
-      
-      //setPowerLevel(EngineSelector::Right, 0);
-      //setPowerLevel(EngineSelector::Left, 0);
       engineGoStraight(0);
       driving_mode = 0;
 
@@ -326,46 +306,44 @@ void readFromBluetooth() {
   if(Serial1.available())
   {
     //czyta pojedynczy znak w formie inta
+    int bt_read_int;
     bt_read_int = Serial1.read();
     serial_buffer += (char)bt_read_int;
-    serial_buffer = serial_buffer.toLowerCase();
-    serial_buffer = serial_buffer.trim();
+    serial_buffer.toLowerCase();
+    serial_buffer.trim();
+    
   }
   else if(!Serial.available())
   {
-    serial_buffer = String(""); //w momencie zapełnienia się buffera jest on momentalnie czyszczony
+    serial_buffer = String("");
   }
-
-  
-  //jeśli nasz string zgadza się z docelowym stringiem to wywoływana jest funkcjonalność
-  if(serial_buffer == comp_string)
-  {
-    Serial1.print("\nMEMES WORK BABY! "); //w tym przypadku memes
-  }
-  //trim
 }
 
-void determineDrivingTendencyDirection(String bt_command) {
+void handleBluetoothSerial(String bt_command) {
   //bt_command to będzie komenda zczytana z bluetootha i na jej podstawie okreslamy nasz nowy kierunek jazdy
   //double driving_tendency_angle
   //double target_angle;
-  String command = bt_command.toLowerCase();// chcemy miec case-insensitive kontrolę
   //zmieniamy nasza komende na int'a, przyda nam sie to, jesli inputem był rzeczywiscie numer
   //right_angles[i] -= right_angles[i] > 180 ? 360 : 0;
-  int command_int = command.toInt(); 
-  String comp_string = String("memes");
-  if(command == String("n")) {
+//  int command_int = bt_command.toInt(); 
+
+  if(bt_command == String("north")) {
+    Serial1.flush();
     driving_tendency_angle = right_angles[0];
   }
-  else if(command == String("e")) {
+  else if(bt_command == String("east")) {
+    Serial1.flush();
     driving_tendency_angle = right_angles[1];
   }
-  else if(command == String("s")) {
+  else if(bt_command == String("south")) {
+    Serial1.flush();
     driving_tendency_angle = right_angles[2];
   }
-  else if(command == String("w")) {
+  else if(bt_command == String("west")) {
+    Serial1.flush();
     driving_tendency_angle = right_angles[3];
   }
+  /*
   //teraz sprawdzamy jeśli komenda z bluetootha nie była z zadnym kierunków geograficznych tylko numerem
   else if(command_int > 0 && bt_command_int <= 90) {
     //driving_tendency_angle = kat z ring_angles[i]; wiekszy o 1 index
@@ -378,7 +356,7 @@ void determineDrivingTendencyDirection(String bt_command) {
   }
   else if(command_int >= 0 && bt_command_int < 90) {
     //driving_tendency_angle = kat z ring_angles[i]; mniejszy o 1 indexy
-  }
+  }*/
 }
 
 void engineTurn(int left_axis_power, int right_axis_power) { //funkcja do latwiejszego skrecania autkiem
