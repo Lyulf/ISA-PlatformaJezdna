@@ -19,6 +19,7 @@ double right_angles[4];
 double driving_tendency_angle;
 int driving_mode = 0;
 int front_obstruction_filter = 0;
+int side_obstruction_filter = 0;
 double distance_measured[20];
 
 
@@ -33,6 +34,9 @@ char buffer[64];
 int d[5] = {};
 int sum = 0;
 int id = 0;
+double current_angle;
+double target_angle;
+int dist;
 
 void loop(void);
 void setup(void);
@@ -49,6 +53,10 @@ void readFromBluetooth();
 void determineDrivingTendencyDirection(String bt_command);
 void engineTurn(int left_axis_power, int right_axis_power);
 void engineGoStraight(int both_axis_power);
+void turn(int dir);
+void driveStraight();
+int getLeftDistance();
+int getRightDistance();
 
 void setup(void) {
   // Inicjalizacja
@@ -96,10 +104,7 @@ void setup(void) {
 
 void loop(void) {
 
-  int dist = getFrontDistance();
-  
-  static double current_angle;
-  static double target_angle;
+
 
   //test
   
@@ -112,72 +117,14 @@ void loop(void) {
   */
   
   //readFromBluetooth
-  readFromBluetooth();
+  //readFromBluetooth();
 
   
   if (driving_mode == 0) {
-    //tryb jazdy do przodu
-    //setPowerLevel(EngineSelector::Right, FORWARD_POWER);
-    //setPowerLevel(EngineSelector::Left, FORWARD_POWER);
-    engineGoStraight(FORWARD_POWER);
-    
-    if (dist < OBSTACLE_DISTANCE) {
-      //filtr
-      front_obstruction_filter++;
-    }
-    else {
-      front_obstruction_filter = 0;
-    }
-    if (front_obstruction_filter > 3) {
-      //setPowerLevel(EngineSelector::Right, 0);
-      //setPowerLevel(EngineSelector::Left, 0);
-      engineGoStraight(0);
-      
-      Serial1.print("\n I see an obstacle before me");
-      delay(1000);
-      
-      
-      current_angle = getCurrentAngle();
-      
-      //target angle może być zwracany przez funkcje na zasadzie 'seek route'
-      target_angle = current_angle + 90;
-      target_angle -= target_angle > 180 ? 360 : 0;
-      sprintf(buffer, "\n trg before: %f", target_angle);
-      Serial1.print(buffer);
-      correctTargetAngle(target_angle);
-      sprintf(buffer, "     trg after: %f", target_angle);
-      Serial1.print(buffer);
-      
-      front_obstruction_filter = 0;
-      driving_mode = 1;
-    }
+    driveStraight();
   }
-  else if(driving_mode == 1){
-    //tryb obracania
-    //setPowerLevel(EngineSelector::Right, -TURNING_POWER);
-    //setPowerLevel(EngineSelector::Left, TURNING_POWER);
-    engineTurn(TURNING_POWER, -TURNING_POWER);
-
-    current_angle = getCurrentAngle();
-    
-    if(fabs(angleDifference(current_angle, target_angle)) < MAX_ANGLE_DIFFERENCE){
-      
-      //setPowerLevel(EngineSelector::Right, 0);
-      //setPowerLevel(EngineSelector::Left, 0);
-      engineGoStraight(0);
-      driving_mode = 0;
-
-      sprintf(buffer, "\n actual: %f", current_angle);
-      Serial1.print(buffer);
-
-      sprintf(buffer, "     expected: %f", target_angle);
-      Serial1.print(buffer);
-  
-      Serial1.print("\n Turning protocol concluded, resuming journey");
-  
-      delay(1000);
-    }
-    
+  else if(driving_mode == 1 || driving_mode == -1){
+    turn(driving_mode);
   }
   
 }
@@ -229,6 +176,22 @@ int getFrontDistance() {
   sum += d[id] = dist;
   id = (id + 1) % 5;
   dist = sum / 5;
+
+  return dist;
+}
+
+int getRightDistance() {
+  int dist = measureSoundSpeed(
+               ultrasound_trigger_pin[(int)UltraSoundSensor::Right],
+               ultrasound_echo_pin[(int)UltraSoundSensor::Right]);
+               
+  return dist;
+}
+
+int getLeftDistance() {
+  int dist = measureSoundSpeed(
+               ultrasound_trigger_pin[(int)UltraSoundSensor::Front],
+               ultrasound_echo_pin[(int)UltraSoundSensor::Front]);
 
   return dist;
 }
@@ -390,4 +353,70 @@ void engineTurn(int left_axis_power, int right_axis_power) { //funkcja do latwie
 void engineGoStraight(int both_axis_power) { //funkcja do nadawania mocy obu osiom autka na raz
     setPowerLevel(EngineSelector::Left, both_axis_power);
     setPowerLevel(EngineSelector::Right, both_axis_power);
+}
+
+void turn(int dir) {
+    engineTurn(TURNING_POWER * dir, -TURNING_POWER * dir);
+
+    current_angle = getCurrentAngle();
+    
+    if(fabs(angleDifference(current_angle, target_angle)) < MAX_ANGLE_DIFFERENCE){
+
+      engineGoStraight(0);
+      driving_mode = 0;
+
+      sprintf(buffer, "\n actual: %f", current_angle);
+      Serial1.print(buffer);
+
+      sprintf(buffer, "     expected: %f", target_angle);
+      Serial1.print(buffer);
+  
+      Serial1.print("\n Turning protocol concluded, resuming journey");
+  
+      delay(1000);
+    }
+}
+
+void driveStraight() {
+
+    dist = getFrontDistance();
+    
+    engineGoStraight(FORWARD_POWER);
+    
+    if (dist < OBSTACLE_DISTANCE) {
+      //filtr
+      front_obstruction_filter++;
+    }
+    else {
+      front_obstruction_filter = 0;
+    }
+
+    if (front_obstruction_filter > 3) {
+      engineGoStraight(0);
+      
+      Serial1.print("\n I see an obstacle before me");
+      delay(1000);
+      
+      
+      current_angle = getCurrentAngle();
+
+      if(getRightDistance() > getLeftDistance()){
+        target_angle = current_angle + 90;
+        target_angle -= target_angle > 180 ? 360 : 0;
+        driving_mode = 1;
+      }
+      else {
+        target_angle = current_angle - 90;
+        target_angle += target_angle < -180 ? 360 : 0;
+        driving_mode = -1;
+      }
+      
+      sprintf(buffer, "\n trg before: %f", target_angle);
+      Serial1.print(buffer);
+      correctTargetAngle(target_angle);
+      sprintf(buffer, "     trg after: %f", target_angle);
+      Serial1.print(buffer);
+      
+      front_obstruction_filter = 0;
+    }
 }
