@@ -19,8 +19,8 @@ double right_angles[4];
 double driving_tendency_angle;
 int driving_mode = 0;
 int front_obstruction_filter = 0;
+int side_obstruction_filter = 0;
 double distance_measured[20];
-
 
 
 //BT variables
@@ -30,6 +30,9 @@ char buffer[64];
 int d[5] = {};
 int sum = 0;
 int id = 0;
+double current_angle;
+double target_angle;
+int dist;
 
 void loop(void);
 void setup(void);
@@ -46,6 +49,12 @@ void readFromBluetooth();
 void handleBluetoothSerial(String bt_command);
 void engineTurn(int left_axis_power, int right_axis_power);
 void engineGoStraight(int both_axis_power);
+void turn(int dir);
+void driveStraight();
+int getLeftDistance();
+int getRightDistance();
+void calibrateRightAngles();
+void requestChar(char c);
 
 void setup(void) {
   // Inicjalizacja
@@ -80,6 +89,8 @@ void setup(void) {
   right_angles[2] = SOUTH_DIR;
   right_angles[3] = WEST_DIR;
 
+  calibrateRightAngles();
+
   //right_angles[0] = initial_angle;
   for (int i = 0; i < 4; i++) {
     //right_angles[i] = initial_angle + 90 * i;
@@ -91,12 +102,7 @@ void setup(void) {
 }
 
 
-void loop(void) {
-
-  int dist = getFrontDistance();
-  
-  static double current_angle;
-  static double target_angle;
+void loop(void) { 
   if(Serial1.available()) {
     readFromBluetooth();
     handleBluetoothSerial(serial_buffer);
@@ -106,62 +112,11 @@ void loop(void) {
     serial_buffer = String("");
   }
   
-  
-  
   if (driving_mode == 0) {
-    //tryb jazdy do przodu
-    engineGoStraight(FORWARD_POWER);
-    
-    if (dist < OBSTACLE_DISTANCE) {
-      //filtr
-      front_obstruction_filter++;
-    }
-    else {
-      front_obstruction_filter = 0;
-    }
-    if (front_obstruction_filter > 3) {
-      engineGoStraight(0);
-      
-      Serial1.print("\n I see an obstacle before me");
-      delay(1000);
-      
-      
-      current_angle = getCurrentAngle();
-      
-      //target angle może być zwracany przez funkcje na zasadzie 'seek route'
-      target_angle = current_angle + 90;
-      target_angle -= target_angle > 180 ? 360 : 0;
-      sprintf(buffer, "\n trg before: %f", target_angle);
-      Serial1.print(buffer);
-      correctTargetAngle(target_angle);
-      sprintf(buffer, "     trg after: %f", target_angle);
-      Serial1.print(buffer);
-      
-      front_obstruction_filter = 0;
-      driving_mode = 1;
-    }
+    driveStraight();
   }
-  else if(driving_mode == 1){
-    //tryb obracania
-    engineTurn(TURNING_POWER, -TURNING_POWER);
-
-    current_angle = getCurrentAngle();
-    
-    if(fabs(angleDifference(current_angle, target_angle)) < MAX_ANGLE_DIFFERENCE){
-      engineGoStraight(0);
-      driving_mode = 0;
-
-      sprintf(buffer, "\n actual: %f", current_angle);
-      Serial1.print(buffer);
-
-      sprintf(buffer, "     expected: %f", target_angle);
-      Serial1.print(buffer);
-  
-      Serial1.print("\n Turning protocol concluded, resuming journey");
-  
-      delay(1000);
-    }
-    
+  else if(driving_mode == 1 || driving_mode == -1){
+    turn(driving_mode);
   }
   
 }
@@ -213,6 +168,22 @@ int getFrontDistance() {
   sum += d[id] = dist;
   id = (id + 1) % 5;
   dist = sum / 5;
+
+  return dist;
+}
+
+int getRightDistance() {
+  int dist = measureSoundSpeed(
+               ultrasound_trigger_pin[(int)UltraSoundSensor::Right],
+               ultrasound_echo_pin[(int)UltraSoundSensor::Right]);
+               
+  return dist;
+}
+
+int getLeftDistance() {
+  int dist = measureSoundSpeed(
+               ultrasound_trigger_pin[(int)UltraSoundSensor::Front],
+               ultrasound_echo_pin[(int)UltraSoundSensor::Front]);
 
   return dist;
 }
@@ -299,7 +270,6 @@ int measureSoundSpeed(int trigger_pin, int echo_pin)
   // zmierz czas przelotu fali dźwiękowej
   int duration = pulseIn(echo_pin, true, 50 * 1000);
 
-
   // przelicz czas na odległość (1/2 Vsound(t=20st.C))
   int distance = (int)((float)duration * 0.03438f * 0.5f);
   return distance;
@@ -313,14 +283,13 @@ void readFromBluetooth() {
     serial_buffer += (char)bt_read_int;
     serial_buffer.toLowerCase();
     serial_buffer.trim();
-
-  
 }
 
 void handleBluetoothSerial(String bt_command) {
   //bt_command to będzie komenda zczytana z bluetootha i na jej podstawie okreslamy nasz nowy kierunek jazdy
   //double driving_tendency_angle
   //double target_angle;
+
   //zmieniamy nasza komende na int'a, przyda nam sie to, jesli inputem był rzeczywiscie numer
   //right_angles[i] -= right_angles[i] > 180 ? 360 : 0;
 //  int command_int = bt_command.toInt(); 
@@ -343,16 +312,16 @@ void handleBluetoothSerial(String bt_command) {
   }
   /*
   //teraz sprawdzamy jeśli komenda z bluetootha nie była z zadnym kierunków geograficznych tylko numerem
-  else if(command_int > 0 && bt_command_int <= 90) {
+  else if(command_int > 0 && command_int <= 90) {
     //driving_tendency_angle = kat z ring_angles[i]; wiekszy o 1 index
   }
-  else if(command_int > 90 && bt_command_int <= 180) {
+  else if(command_int > 90 && command_int <= 180) {
     //driving_tendency_angle = kat z ring_angles[i]; wiekszy o 2 indexy
   }
-  else if(command_int >= -180 && bt_command_int <= 90) {
+  else if(command_int >= -180 && command_int <= 90) {
     //driving_tendency_angle = kat z ring_angles[i]; mniejszy o 2 indexy
   }
-  else if(command_int >= 0 && bt_command_int < 90) {
+  else if(command_int >= 0 && command_int < 90) {
     //driving_tendency_angle = kat z ring_angles[i]; mniejszy o 1 indexy
   }*/
 }
@@ -365,4 +334,102 @@ void engineTurn(int left_axis_power, int right_axis_power) { //funkcja do latwie
 void engineGoStraight(int both_axis_power) { //funkcja do nadawania mocy obu osiom autka na raz
     setPowerLevel(EngineSelector::Left, both_axis_power);
     setPowerLevel(EngineSelector::Right, both_axis_power);
+}
+
+void turn(int dir) {
+    engineTurn(TURNING_POWER * dir, -TURNING_POWER * dir);
+
+    current_angle = getCurrentAngle();
+    
+    if(fabs(angleDifference(current_angle, target_angle)) < MAX_ANGLE_DIFFERENCE){
+
+      engineGoStraight(0);
+      driving_mode = 0;
+
+      sprintf(buffer, "\n actual: %f", current_angle);
+      Serial1.print(buffer);
+
+      sprintf(buffer, "     expected: %f", target_angle);
+      Serial1.print(buffer);
+  
+      Serial1.print("\n Turning protocol concluded, resuming journey");
+  
+      delay(1000);
+    }
+}
+
+void driveStraight() {
+
+    dist = getFrontDistance();
+    
+    engineGoStraight(FORWARD_POWER);
+    
+    if (dist < OBSTACLE_DISTANCE) {
+      //filtr
+      front_obstruction_filter++;
+    }
+    else {
+      front_obstruction_filter = 0;
+    }
+
+    if (front_obstruction_filter > 3) {
+      engineGoStraight(0);
+      
+      Serial1.print("\n I see an obstacle before me");
+      delay(1000); 
+      
+      current_angle = getCurrentAngle();
+
+      if(getRightDistance() > getLeftDistance()){
+        target_angle = current_angle + 90;
+        target_angle -= target_angle > 180 ? 360 : 0;
+        driving_mode = 1;
+      }
+      else {
+        target_angle = current_angle - 90;
+        target_angle += target_angle < -180 ? 360 : 0;
+        driving_mode = -1;
+      }
+      
+      sprintf(buffer, "\n trg before: %f", target_angle);
+      Serial1.print(buffer);
+      correctTargetAngle(target_angle);
+      sprintf(buffer, "     trg after: %f", target_angle);
+      Serial1.print(buffer);
+      
+      front_obstruction_filter = 0;
+    }
+}
+
+void calibrateRightAngles() {
+  sprintf(buffer, "\n please point me north and type: '+'");
+  Serial1.print(buffer);
+  requestChar('+');
+  right_angles[0] = getCurrentAngle();
+
+  sprintf(buffer, "\n please point me east and type '+'");
+  Serial1.print(buffer);
+  requestChar('+');
+  right_angles[1] = getCurrentAngle();
+
+  sprintf(buffer, "\n please point me south and type '+'");
+  Serial1.print(buffer);
+  requestChar('+');
+  right_angles[2] = getCurrentAngle();
+
+  sprintf(buffer, "\n please point me west and type '+'");
+  Serial1.print(buffer);
+  requestChar('+');
+  right_angles[3] = getCurrentAngle();
+  
+}
+
+void requestChar(char c) {
+  while(1) {
+    if(Serial1.available()){
+      if (Serial1.read() == c) {
+        break;
+      }
+    }
+   }
 }
