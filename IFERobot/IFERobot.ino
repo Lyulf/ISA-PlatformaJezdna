@@ -23,7 +23,6 @@ int side_obstruction_filter = 0;
 double distance_measured[20];
 
 
-
 //BT syntax buffer iterator
 int bt_buffer_iterator = 0;
 int bt_read_int = 0;
@@ -58,6 +57,7 @@ void driveStraight();
 int getLeftDistance();
 int getRightDistance();
 void calibrateRightAngles();
+void requestChar(char c);
 
 void setup(void) {
   // Inicjalizacja
@@ -422,40 +422,34 @@ void driveStraight() {
 }
 
 void calibrateRightAngles() {
-  sprintf(buffer, "\n please point me north and type y");
+  sprintf(buffer, "\n please point me north and type: '+'");
   Serial1.print(buffer);
-   while(1) {
-    if (Serial.read() == 'y') {
-      break;
-    }
-   }
+  requestChar('+');
   right_angles[0] = getCurrentAngle();
 
-  sprintf(buffer, "\n please point me east and type y");
+  sprintf(buffer, "\n please point me east and type '+'");
   Serial1.print(buffer);
-   while(1) {
-    if (Serial.read() == 'y') {
-      break;
-    }
-   }
+  requestChar('+');
   right_angles[1] = getCurrentAngle();
 
-  sprintf(buffer, "\n please point me south and type y");
+  sprintf(buffer, "\n please point me south and type '+'");
   Serial1.print(buffer);
-   while(1) {
-    if (Serial.read() == 'y') {
-      break;
-    }
-   }
+  requestChar('+');
   right_angles[2] = getCurrentAngle();
 
-  sprintf(buffer, "\n please point me west and type y");
+  sprintf(buffer, "\n please point me west and type '+'");
   Serial1.print(buffer);
-   while(1) {
-    if (Serial.read() == 'y') {
-      break;
+  requestChar('+');
+  right_angles[3] = getCurrentAngle();
+  
+}
+
+void requestChar(char c) {
+  while(1) {
+    if(Serial1.available()){
+      if (Serial1.read() == c) {
+        break;
+      }
     }
    }
-  right_angles[2] = getCurrentAngle();
-  
 }
