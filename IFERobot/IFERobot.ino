@@ -328,8 +328,8 @@ void readFromBluetooth() {
     //czyta pojedynczy znak w formie inta
     bt_read_int = Serial1.read();
     serial_buffer += (char)bt_read_int;
-    serial_buffer = serial_buffer.toLowerCase();
-    serial_buffer = serial_buffer.trim();
+    serial_buffer.toLowerCase();
+    serial_buffer.trim();
   }
   else if(!Serial.available())
   {
@@ -349,7 +349,8 @@ void determineDrivingTendencyDirection(String bt_command) {
   //bt_command to będzie komenda zczytana z bluetootha i na jej podstawie okreslamy nasz nowy kierunek jazdy
   //double driving_tendency_angle
   //double target_angle;
-  String command = bt_command.toLowerCase();// chcemy miec case-insensitive kontrolę
+  String command = bt_command;
+  command.toLowerCase();// chcemy miec case-insensitive kontrolę
   //zmieniamy nasza komende na int'a, przyda nam sie to, jesli inputem był rzeczywiscie numer
   //right_angles[i] -= right_angles[i] > 180 ? 360 : 0;
   int command_int = command.toInt(); 
