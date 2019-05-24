@@ -101,6 +101,10 @@ void loop(void) {
     readFromBluetooth();
     handleBluetoothSerial(serial_buffer);
   }
+  else if(!Serial.available())
+  {
+    serial_buffer = String("");
+  }
   
   
   
@@ -303,20 +307,14 @@ int measureSoundSpeed(int trigger_pin, int echo_pin)
 
 void readFromBluetooth() {
   //jeśli istnieje w serialu znak to wchodzi w loop
-  if(Serial1.available())
-  {
     //czyta pojedynczy znak w formie inta
     int bt_read_int;
     bt_read_int = Serial1.read();
     serial_buffer += (char)bt_read_int;
     serial_buffer.toLowerCase();
     serial_buffer.trim();
-    
-  }
-  else if(!Serial.available())
-  {
-    serial_buffer = String("");
-  }
+
+  
 }
 
 void handleBluetoothSerial(String bt_command) {
