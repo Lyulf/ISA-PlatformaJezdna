@@ -57,6 +57,7 @@ void turn(int dir);
 void driveStraight();
 int getLeftDistance();
 int getRightDistance();
+void calibrateRightAngles();
 
 void setup(void) {
   // Inicjalizacja
@@ -90,6 +91,8 @@ void setup(void) {
   right_angles[1] = EAST_DIR;
   right_angles[2] = SOUTH_DIR;
   right_angles[3] = WEST_DIR;
+
+  calibrateRightAngles();
 
   //right_angles[0] = initial_angle;
   for (int i = 0; i < 4; i++) {
@@ -278,7 +281,6 @@ int measureSoundSpeed(int trigger_pin, int echo_pin)
   // zmierz czas przelotu fali dźwiękowej
   int duration = pulseIn(echo_pin, true, 50 * 1000);
 
-
   // przelicz czas na odległość (1/2 Vsound(t=20st.C))
   int distance = (int)((float)duration * 0.03438f * 0.5f);
   return distance;
@@ -298,8 +300,7 @@ void readFromBluetooth() {
   {
     serial_buffer = String(""); //w momencie zapełnienia się buffera jest on momentalnie czyszczony
   }
-
-  
+ 
   //jeśli nasz string zgadza się z docelowym stringiem to wywoływana jest funkcjonalność
   if(serial_buffer == comp_string)
   {
@@ -395,8 +396,7 @@ void driveStraight() {
       engineGoStraight(0);
       
       Serial1.print("\n I see an obstacle before me");
-      delay(1000);
-      
+      delay(1000); 
       
       current_angle = getCurrentAngle();
 
@@ -419,4 +419,43 @@ void driveStraight() {
       
       front_obstruction_filter = 0;
     }
+}
+
+void calibrateRightAngles() {
+  sprintf(buffer, "\n please point me north and type y");
+  Serial1.print(buffer);
+   while(1) {
+    if (Serial.read() == 'y') {
+      break;
+    }
+   }
+  right_angles[0] = getCurrentAngle();
+
+  sprintf(buffer, "\n please point me east and type y");
+  Serial1.print(buffer);
+   while(1) {
+    if (Serial.read() == 'y') {
+      break;
+    }
+   }
+  right_angles[1] = getCurrentAngle();
+
+  sprintf(buffer, "\n please point me south and type y");
+  Serial1.print(buffer);
+   while(1) {
+    if (Serial.read() == 'y') {
+      break;
+    }
+   }
+  right_angles[2] = getCurrentAngle();
+
+  sprintf(buffer, "\n please point me west and type y");
+  Serial1.print(buffer);
+   while(1) {
+    if (Serial.read() == 'y') {
+      break;
+    }
+   }
+  right_angles[2] = getCurrentAngle();
+  
 }
