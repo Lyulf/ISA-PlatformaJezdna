@@ -368,16 +368,16 @@ void determineDrivingTendencyDirection(String bt_command) {
     driving_tendency_angle = right_angles[3];
   }
   //teraz sprawdzamy jeśli komenda z bluetootha nie była z zadnym kierunków geograficznych tylko numerem
-  else if(command_int > 0 && bt_command_int <= 90) {
+  else if(command_int > 0 && command_int <= 90) {
     //driving_tendency_angle = kat z ring_angles[i]; wiekszy o 1 index
   }
-  else if(command_int > 90 && bt_command_int <= 180) {
+  else if(command_int > 90 && command_int <= 180) {
     //driving_tendency_angle = kat z ring_angles[i]; wiekszy o 2 indexy
   }
-  else if(command_int >= -180 && bt_command_int <= 90) {
+  else if(command_int >= -180 && command_int <= 90) {
     //driving_tendency_angle = kat z ring_angles[i]; mniejszy o 2 indexy
   }
-  else if(command_int >= 0 && bt_command_int < 90) {
+  else if(command_int >= 0 && command_int < 90) {
     //driving_tendency_angle = kat z ring_angles[i]; mniejszy o 1 indexy
   }
 }
