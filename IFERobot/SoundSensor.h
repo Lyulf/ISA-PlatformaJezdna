@@ -35,23 +35,26 @@ struct UltraSoundSensor {
 		All,
 	};
 };
- 
-extern int ultrasound_trigger_pin[];
-extern int ultrasound_echo_pin[];
 
-extern int d[];
-extern int sum;
-extern int id;
+class SoundSensor {
+	SoundSensor();
+public:
+	int measureSoundSpeed(int trigger_pin, int echo_pin);
+	int getFrontDistance();
+	int getLeftDistance();
+	int getRightDistance();
 
-extern double distance_measured[];
-extern int front_obstruction_filter;
-extern int side_obstruction_filter;
-extern int dist;
+	static SoundSensor* getInstance();
 
-void initUltraSoundSensor();
-int measureSoundSpeed(int trigger_pin, int echo_pin);
-int getFrontDistance();
-int getLeftDistance();
-int getRightDistance();
+private:
+	int ultrasound_trigger_pin[UltraSoundSensor::All];
+	int ultrasound_echo_pin[UltraSoundSensor::All];
+
+	int d[5];
+	double distance_measured[20];
+	int sum;
+	int id;
+
+}; 
 
 #endif

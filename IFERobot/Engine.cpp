@@ -6,10 +6,13 @@
 #include "Utils.h"
 
 int driving_mode = 0;
+int front_obstruction_filter = 0;
+int side_obstruction_filter = 0;
 double current_angle;
 double target_angle;
 extern Compass* compass;
 extern SerialPort* serial;
+extern SoundSensor* sound_sensor;
 
 void initEngine() {
   pinMode(LEFT_PWM, OUTPUT);
@@ -106,7 +109,7 @@ void turn(int dir) {
 
 void driveStraight() {
 
-    dist = getFrontDistance();
+    auto dist = sound_sensor->getFrontDistance();
     
     engineGoStraight(FORWARD_POWER);
     
@@ -126,7 +129,7 @@ void driveStraight() {
       
       current_angle = compass->getCurrentAngle();
 
-      if(getRightDistance() > getLeftDistance()){
+      if(sound_sensor->getRightDistance() > sound_sensor->getLeftDistance()){
         target_angle = current_angle + 90;
         target_angle -= target_angle > 180 ? 360 : 0;
         driving_mode = 1;

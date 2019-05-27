@@ -8,17 +8,18 @@
 #include <math.h>
 #include <string>
 
-SpeedSensor* speedSensor;
+SoundSensor* sound_sensor;
+SpeedSensor* speed_sensor;
 Compass* compass;
 SerialPort* serial;
 PathAI* ai;
 
 void setup(void) {
   // Inicjalizacja
-  initUltraSoundSensor();
+  sound_sensor = SoundSensor::getInstance();
   initEngine();
   engineGoStraight(0);
-  speedSensor = SpeedSensor::getInstance();
+  speed_sensor = SpeedSensor::getInstance();
   Wire.begin();
   compass = Compass::getInstance();
 
