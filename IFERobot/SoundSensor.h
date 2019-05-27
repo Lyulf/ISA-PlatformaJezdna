@@ -40,7 +40,7 @@ extern int ultrasound_trigger_pin[];
 extern int ultrasound_echo_pin[];
 
 extern int d[];
-extern int sum ;
+extern int sum;
 extern int id;
 
 extern double distance_measured[];

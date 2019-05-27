@@ -1,10 +1,10 @@
-#include "PathFinding.h"
+#include "PathAI.h"
 #include "Compass.h"
 
-double driving_tendency_angle;
-extern Compass* compass;
+PathAI::PathAI()
+  : compass(Compass::getInstance()), serial(SerialPort::getInstance()) { }
 
-void handleBluetoothSerial(String bt_command) {
+void PathAI::handleBluetoothSerial(String bt_command) {
   //bt_command to będzie komenda zczytana z bluetootha i na jej podstawie okreslamy nasz nowy kierunek jazdy
   //double driving_tendency_angle
   //double target_angle;
@@ -43,4 +43,9 @@ void handleBluetoothSerial(String bt_command) {
   else if(command_int >= 0 && command_int < 90) {
     //driving_tendency_angle = kat z ring_angles[i]; mniejszy o 1 indexy
   }*/
+}
+
+PathAI* PathAI::getInstance() {
+  static PathAI instance;
+  return &instance;
 }

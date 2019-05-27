@@ -5,11 +5,6 @@ SerialPort::SerialPort()
     Serial1.begin(9600); // HC06
   }
 
-SerialPort* SerialPort::getInstance() {
-  static SerialPort instance;
-  return &instance;
-}
-
 void SerialPort::readFromBluetooth() {
   //jeśli istnieje w serialu znak to wchodzi w loop
     //czyta pojedynczy znak w formie inta
@@ -32,4 +27,9 @@ void SerialPort::requestChar(char c) {
 
 String SerialPort::getSerialBuffer() {
   return serial_buffer;
+}
+
+SerialPort* SerialPort::getInstance() {
+  static SerialPort instance;
+  return &instance;
 }

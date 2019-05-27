@@ -24,11 +24,6 @@ Compass::Compass()
   }
 };
 
-Compass* Compass::getInstance() {
-  static Compass instance;
-  return &instance;
-}
-
 double Compass::getCurrentAngle() {
   double avg_angle = 0;
   for (int i = 0; i < NUMBER_OF_INITIAL_SAMPLES; i++) {
@@ -63,4 +58,9 @@ double Compass::getRightAngle(int direction) {
   } else {
     return 0.0;
   }
+}
+
+Compass* Compass::getInstance() {
+  static Compass instance;
+  return &instance;
 }

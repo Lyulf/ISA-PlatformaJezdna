@@ -22,9 +22,10 @@ public:
     double getRightAngle(int direction);
 
     static Compass* getInstance();
+
 private:
     SerialPort* serial;
-    double right_angles[4];
+    double right_angles[Direction::ALL];
 };
 
 #endif

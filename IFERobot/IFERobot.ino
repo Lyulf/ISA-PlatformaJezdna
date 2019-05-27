@@ -1,4 +1,4 @@
-#include "PathFinding.h"
+#include "PathAI.h"
 #include "SpeedSensor.h"
 #include "SoundSensor.h"
 #include "Compass.h"
@@ -11,6 +11,7 @@
 SpeedSensor* speedSensor;
 Compass* compass;
 SerialPort* serial;
+PathAI* ai;
 
 void setup(void) {
   // Inicjalizacja
@@ -34,6 +35,7 @@ void setup(void) {
   double initial_angle = compass->getCurrentAngle();
 
   serial->sendMsg("\n initial_angle = %f", initial_angle);
+  ai = PathAI::getInstance();
 }
 
 
@@ -41,7 +43,7 @@ void loop(void) {
   if(Serial1.available()) {
     serial->readFromBluetooth();
     auto serial_buffer = serial->getSerialBuffer();
-    handleBluetoothSerial(serial_buffer);
+    ai->handleBluetoothSerial(serial_buffer);
   }
 
   else if(!Serial.available()) {

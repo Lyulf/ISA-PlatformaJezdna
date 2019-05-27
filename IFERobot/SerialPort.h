@@ -8,8 +8,6 @@
 class SerialPort {
     SerialPort();
 public:
-    static SerialPort* getInstance();
-
     void readFromBluetooth();
     void requestChar(const char c);
     String getSerialBuffer();
@@ -30,6 +28,8 @@ public:
     void sendRequest(const String& format, Args&& ...args) {
         sendRequest('+', format, args...);
     }
+
+    static SerialPort* getInstance();
 
 private:
     String serial_buffer;
