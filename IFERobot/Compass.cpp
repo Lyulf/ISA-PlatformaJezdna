@@ -1,7 +1,7 @@
 #include "Compass.h"
 #include "Variables.h"
-#include <string>
 #include <math.h>
+#include <string>
 
 Compass::Compass()
   : serial(SerialPort::getInstance()) {

@@ -1,29 +1,32 @@
-#include "PathAI.h"
-#include "SpeedSensor.h"
-#include "SoundSensor.h"
 #include "Compass.h"
-#include "SerialPort.h"
 #include "Engine.h"
+#include "PathAI.h"
+#include "SerialPort.h"
+#include "SoundSensor.h"
+#include "SpeedSensor.h"
 #include "Variables.h"
 #include <math.h>
 #include <string>
 
+SerialPort* serial;
+Compass* compass;
 SoundSensor* sound_sensor;
 SpeedSensor* speed_sensor;
-Compass* compass;
-SerialPort* serial;
+Engine* engine;
 PathAI* ai;
+int driving_mode = 0;
 
 void setup(void) {
   // Inicjalizacja
-  sound_sensor = SoundSensor::getInstance();
-  initEngine();
-  engineGoStraight(0);
-  speed_sensor = SpeedSensor::getInstance();
   Wire.begin();
-  compass = Compass::getInstance();
-
   serial = SerialPort::getInstance();
+  compass = Compass::getInstance();
+  sound_sensor = SoundSensor::getInstance();
+  speed_sensor = SpeedSensor::getInstance();
+  engine = Engine::getInstance();
+
+  engine->engineGoStraight(0);
+
   serial->sendMsg("Hello Father\n");
 
   delay(2000);
@@ -53,10 +56,10 @@ void loop(void) {
   }
   
   if (driving_mode == 0) {
-    driveStraight();
+    engine->driveStraight();
   }
 
   else if(driving_mode == 1 || driving_mode == -1) {
-    turn(driving_mode);
+    engine->turn(driving_mode);
   }
 }

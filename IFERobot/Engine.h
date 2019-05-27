@@ -27,6 +27,10 @@
 #define RIGHT_IN1		45	// in3 (l298n)
 #define RIGHT_IN2		44	// in4 (l298n)
 
+#include "Compass.h"
+#include "SerialPort.h"
+#include "SoundSensor.h"
+
 enum class EngineSelector
 {
 	Left,
@@ -34,16 +38,28 @@ enum class EngineSelector
 };
 
 extern int driving_mode;
-extern double target_angle;
 
-void initEngine();
-void setPowerLevel(EngineSelector side, int level);
+class Engine {
+	Engine();
+public:
+	void setPowerLevel(EngineSelector side, int level);
 
-void driveStraight();
-void engineTurn(int left_axis_power, int right_axis_power);
-void engineGoStraight(int both_axis_power);
+	void driveStraight();
+	void engineTurn(int left_axis_power, int right_axis_power);
+	void engineGoStraight(int both_axis_power);
 
-void turn(int dir);
-void correctTargetAngle(double& angle);
+	void turn(int dir);
+	void correctTargetAngle(double& angle);
+
+	static Engine* getInstance();
+
+private:
+	SerialPort* serial;
+	Compass* compass;
+	SoundSensor* sound_sensor;
+	double target_angle;
+	int front_obstruction_filter;
+	int side_obstruction_filter;
+};
 
 #endif

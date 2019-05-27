@@ -1,9 +1,9 @@
 #ifndef ISA_PATH_AI_H
 #define ISA_PATH_AI_H
 
-#include <Arduino.h>
-#include "SerialPort.h"
 #include "Compass.h"
+#include "SerialPort.h"
+#include <Arduino.h>
 
 class PathAI {
     PathAI();

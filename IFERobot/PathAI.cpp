@@ -1,5 +1,4 @@
 #include "PathAI.h"
-#include "Compass.h"
 
 PathAI::PathAI()
   : compass(Compass::getInstance()), serial(SerialPort::getInstance()) { }

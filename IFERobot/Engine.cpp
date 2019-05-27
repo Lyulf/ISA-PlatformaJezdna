@@ -1,20 +1,13 @@
 #include "Engine.h"
-#include "Compass.h"
-#include "SerialPort.h"
-#include "Variables.h"
-#include "SoundSensor.h"
 #include "Utils.h"
+#include "Variables.h"
 
-int driving_mode = 0;
-int front_obstruction_filter = 0;
-int side_obstruction_filter = 0;
-double current_angle;
-double target_angle;
-extern Compass* compass;
-extern SerialPort* serial;
-extern SoundSensor* sound_sensor;
-
-void initEngine() {
+Engine::Engine()
+  : compass(Compass::getInstance()),
+    serial(SerialPort::getInstance()),
+    sound_sensor(SoundSensor::getInstance()),
+    front_obstruction_filter(0),
+    side_obstruction_filter(0) {
   pinMode(LEFT_PWM, OUTPUT);
   pinMode(LEFT_IN1, OUTPUT);
   pinMode(LEFT_IN2, OUTPUT);
@@ -24,7 +17,7 @@ void initEngine() {
   pinMode(RIGHT_IN2, OUTPUT);
 }
 
-void correctTargetAngle(double& angle) {
+void Engine::correctTargetAngle(double& angle) {
   double tmp = 0;
   for(int i = 0; i < Direction::ALL; i++) {
     tmp = angleDifference(angle, compass->getRightAngle(i));
@@ -35,7 +28,7 @@ void correctTargetAngle(double& angle) {
   }
 }
 
-void setPowerLevel(EngineSelector side, int level)
+void Engine::setPowerLevel(EngineSelector side, int level)
 {
   level = constrain(level, -255, 255);
 
@@ -78,20 +71,20 @@ void setPowerLevel(EngineSelector side, int level)
   } 
 }
 
-void engineTurn(int left_axis_power, int right_axis_power) { //funkcja do latwiejszego skrecania autkiem
+void Engine::engineTurn(int left_axis_power, int right_axis_power) { //funkcja do latwiejszego skrecania autkiem
     setPowerLevel(EngineSelector::Left, left_axis_power);
     setPowerLevel(EngineSelector::Right, right_axis_power);
 }
 
-void engineGoStraight(int both_axis_power) { //funkcja do nadawania mocy obu osiom autka na raz
+void Engine::engineGoStraight(int both_axis_power) { //funkcja do nadawania mocy obu osiom autka na raz
     setPowerLevel(EngineSelector::Left, both_axis_power);
     setPowerLevel(EngineSelector::Right, both_axis_power);
 }
 
-void turn(int dir) {
+void Engine::turn(int dir) {
     engineTurn(TURNING_POWER * dir, -TURNING_POWER * dir);
 
-    current_angle = compass->getCurrentAngle();
+    auto current_angle = compass->getCurrentAngle();
     
     if(fabs(angleDifference(current_angle, target_angle)) < MAX_ANGLE_DIFFERENCE){
 
@@ -107,7 +100,7 @@ void turn(int dir) {
     }
 }
 
-void driveStraight() {
+void Engine::driveStraight() {
 
     auto dist = sound_sensor->getFrontDistance();
     
@@ -124,10 +117,10 @@ void driveStraight() {
     if (front_obstruction_filter > 3) {
       engineGoStraight(0);
       
-      Serial1.print("\n I see an obstacle before me");
+      serial->sendMsg("\n I see an obstacle before me");
       delay(1000); 
       
-      current_angle = compass->getCurrentAngle();
+      auto current_angle = compass->getCurrentAngle();
 
       if(sound_sensor->getRightDistance() > sound_sensor->getLeftDistance()){
         target_angle = current_angle + 90;
@@ -146,4 +139,9 @@ void driveStraight() {
       
       front_obstruction_filter = 0;
     }
+}
+
+Engine* Engine::getInstance() {
+  static Engine instance;
+  return &instance;
 }
