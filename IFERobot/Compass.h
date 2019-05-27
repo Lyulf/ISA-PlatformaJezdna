@@ -2,6 +2,7 @@
 #define ISA_COMPASS_H
 
 #include "QMC5883.h"
+#include "SerialPort.h"
 
 struct Direction {
     enum {
@@ -22,6 +23,7 @@ public:
 
     static Compass* getInstance();
 private:
+    SerialPort* serial;
     double right_angles[4];
 };
 

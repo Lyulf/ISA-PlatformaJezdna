@@ -1,11 +1,10 @@
 #include "Compass.h"
-#include "SerialPort.h"
 #include "Variables.h"
 #include <string>
 #include <math.h>
 
 Compass::Compass()
-  : right_angles() {
+  : serial(SerialPort::getInstance()) {
   QMC5883::init();
   //hardcoded values
   right_angles[Direction::NORTH] = NORTH_DIR;
@@ -21,8 +20,7 @@ Compass::Compass()
     //right_angles[i] = initial_angle + 90 * i;
     //right_angles[i] -= right_angles[i] > 180 ? 360 : 0;
     
-    sprintf(buffer, "\n right_angle[%d] = %f", i, right_angles[i]);
-    Serial1.print(buffer);
+    serial->sendMsg("\n right_angle[%d] = %f", i, right_angles[i]);
   }
 };
 
@@ -45,24 +43,16 @@ double Compass::getCurrentAngle() {
 }
 
 void Compass::calibrateRightAngles() {
-  sprintf(buffer, "\n please point me north and type: '+'");
-  Serial1.print(buffer);
-  requestChar('+');
+  serial->sendRequest("\n please point me north and type: '+'");
   right_angles[Direction::NORTH] = getCurrentAngle();
 
-  sprintf(buffer, "\n please point me east and type '+'");
-  Serial1.print(buffer);
-  requestChar('+');
+  serial->sendRequest("\n please point me east and type '+'");
   right_angles[Direction::EAST] = getCurrentAngle();
 
-  sprintf(buffer, "\n please point me south and type '+'");
-  Serial1.print(buffer);
-  requestChar('+');
+  serial->sendRequest("\n please point me south and type '+'");
   right_angles[Direction::SOUTH] = getCurrentAngle();
 
-  sprintf(buffer, "\n please point me west and type '+'");
-  Serial1.print(buffer);
-  requestChar('+');
+  serial->sendRequest("\n please point me west and type '+'");
   right_angles[Direction::WEST] = getCurrentAngle();
   
 }

@@ -9,6 +9,7 @@ int driving_mode = 0;
 double current_angle;
 double target_angle;
 extern Compass* compass;
+extern SerialPort* serial;
 
 void initEngine() {
   pinMode(LEFT_PWM, OUTPUT);
@@ -94,13 +95,10 @@ void turn(int dir) {
       engineGoStraight(0);
       driving_mode = 0;
 
-      sprintf(buffer, "\n actual: %f", current_angle);
-      Serial1.print(buffer);
+      serial->sendMsg("\n actual: %f", current_angle);
 
-      sprintf(buffer, "     expected: %f", target_angle);
-      Serial1.print(buffer);
-  
-      Serial1.print("\n Turning protocol concluded, resuming journey");
+      serial->sendMsg("     expected: %f", target_angle);
+      serial->sendMsg("\n Turning protocol concluded, resuming journey");
   
       delay(1000);
     }
@@ -139,11 +137,9 @@ void driveStraight() {
         driving_mode = -1;
       }
       
-      sprintf(buffer, "\n trg before: %f", target_angle);
-      Serial1.print(buffer);
+      serial->sendMsg("\n trg before: %f", target_angle);
       correctTargetAngle(target_angle);
-      sprintf(buffer, "     trg after: %f", target_angle);
-      Serial1.print(buffer);
+      serial->sendMsg("     trg after: %f", target_angle);
       
       front_obstruction_filter = 0;
     }

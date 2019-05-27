@@ -10,6 +10,7 @@
 
 SpeedSensor* speedSensor;
 Compass* compass;
+SerialPort* serial;
 
 void setup(void) {
   // Inicjalizacja
@@ -20,30 +21,31 @@ void setup(void) {
   Wire.begin();
   compass = Compass::getInstance();
 
-  Serial1.begin(9600); // HC06
-  Serial1.print("Hello Father\n");
+  serial = SerialPort::getInstance();
+  serial->sendMsg("Hello Father\n");
 
   delay(2000);
 
   //finds initial angle based on average of measurements
 
-  Serial1.print("I have awakened\n");
+  serial->sendMsg("I have awakened\n");
   
   //calculating intitial angle based on average of multiple samples
   double initial_angle = compass->getCurrentAngle();
 
-  sprintf(buffer, "\n initial_angle = %f", initial_angle);
-  Serial1.print(buffer);
+  serial->sendMsg("\n initial_angle = %f", initial_angle);
 }
 
 
 void loop(void) { 
   if(Serial1.available()) {
-    readFromBluetooth();
+    serial->readFromBluetooth();
+    auto serial_buffer = serial->getSerialBuffer();
     handleBluetoothSerial(serial_buffer);
   }
 
   else if(!Serial.available()) {
+    auto serial_buffer = serial->getSerialBuffer();
     serial_buffer = String("");
   }
   
