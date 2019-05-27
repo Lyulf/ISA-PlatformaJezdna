@@ -2,6 +2,7 @@
 #include "Compass.h"
 
 double driving_tendency_angle;
+extern Compass* compass;
 
 void handleBluetoothSerial(String bt_command) {
   //bt_command to będzie komenda zczytana z bluetootha i na jej podstawie okreslamy nasz nowy kierunek jazdy
@@ -14,19 +15,19 @@ void handleBluetoothSerial(String bt_command) {
 
   if(bt_command == String("north")) {
     Serial1.flush();
-    driving_tendency_angle = right_angles[0];
+    driving_tendency_angle = compass->getRightAngle(Direction::NORTH);
   }
   else if(bt_command == String("east")) {
     Serial1.flush();
-    driving_tendency_angle = right_angles[1];
+    driving_tendency_angle = compass->getRightAngle(Direction::EAST);
   }
   else if(bt_command == String("south")) {
     Serial1.flush();
-    driving_tendency_angle = right_angles[2];
+    driving_tendency_angle = compass->getRightAngle(Direction::SOUTH);
   }
   else if(bt_command == String("west")) {
     Serial1.flush();
-    driving_tendency_angle = right_angles[3];
+    driving_tendency_angle = compass->getRightAngle(Direction::WEST);
   }
   /*
   //teraz sprawdzamy jeśli komenda z bluetootha nie była z zadnym kierunków geograficznych tylko numerem

@@ -1,8 +1,6 @@
 #ifndef ISA_ENGINE_H
 #define ISA_ENGINE_H
 
-#include "Compass.h"
-
 /*
  * Silniki, sterowanie PWM
  * 

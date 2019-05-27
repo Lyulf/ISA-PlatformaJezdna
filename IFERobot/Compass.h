@@ -3,12 +3,26 @@
 
 #include "QMC5883.h"
 
-extern QMC5883 qmc;
-extern double right_angles[];
-extern double current_angle;
+struct Direction {
+    enum {
+        NORTH = 0,
+        EAST,
+        SOUTH,
+        WEST,
+        ALL
+    };
+};
 
-double getCurrentAngle();
-void calibrateRightAngles();
-double angleDifference(double current, double target);
+class Compass : public QMC5883 {
+    Compass();
+public:
+    double getCurrentAngle();
+    void calibrateRightAngles();
+    double getRightAngle(int direction);
+
+    static Compass* getInstance();
+private:
+    double right_angles[4];
+};
 
 #endif

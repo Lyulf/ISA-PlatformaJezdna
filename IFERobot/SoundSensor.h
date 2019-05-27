@@ -22,16 +22,18 @@
 #define US_RIGHT_TRIGGER_PIN	4
 #define US_RIGHT_ECHO_PIN		5
 
-enum class UltraSoundSensor {
-	Front = 0,
-	Back = 1,
-	Left = 2,
-	Right = 3,
+struct UltraSoundSensor {
+	enum {
+		Front = 0,
+		Back = 1,
+		Left = 2,
+		Right = 3,
 	
-	__first = Front,
-	__last = Right,
+		__first = Front,
+		__last = Right,
 	
-	All,
+		All,
+	};
 };
  
 extern int ultrasound_trigger_pin[];

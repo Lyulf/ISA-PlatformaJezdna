@@ -6,7 +6,7 @@ SpeedSensor::SpeedSensor() {
   pinMode(ENCODER_RIGHT, INPUT);
 }
 
-SpeedSensor& SpeedSensor::getInstance() {
+SpeedSensor* SpeedSensor::getInstance() {
   static SpeedSensor instance;
-  return instance;
+  return &instance;
 }

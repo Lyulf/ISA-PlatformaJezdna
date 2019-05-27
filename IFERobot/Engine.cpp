@@ -3,9 +3,12 @@
 #include "SerialPort.h"
 #include "Variables.h"
 #include "SoundSensor.h"
+#include "Utils.h"
 
 int driving_mode = 0;
+double current_angle;
 double target_angle;
+extern Compass* compass;
 
 void initEngine() {
   pinMode(LEFT_PWM, OUTPUT);
@@ -19,10 +22,10 @@ void initEngine() {
 
 void correctTargetAngle(double& angle) {
   double tmp = 0;
-  for(int i = 0; i < 4; i++) {
-    tmp = angleDifference(angle, right_angles[i]);
+  for(int i = 0; i < Direction::ALL; i++) {
+    tmp = angleDifference(angle, compass->getRightAngle(i));
     if(fabs(tmp) <= 45) {
-      angle = right_angles[i];
+      angle = compass->getRightAngle(i);
       return;
     }
   }
@@ -84,7 +87,7 @@ void engineGoStraight(int both_axis_power) { //funkcja do nadawania mocy obu osi
 void turn(int dir) {
     engineTurn(TURNING_POWER * dir, -TURNING_POWER * dir);
 
-    current_angle = getCurrentAngle();
+    current_angle = compass->getCurrentAngle();
     
     if(fabs(angleDifference(current_angle, target_angle)) < MAX_ANGLE_DIFFERENCE){
 
@@ -123,7 +126,7 @@ void driveStraight() {
       Serial1.print("\n I see an obstacle before me");
       delay(1000); 
       
-      current_angle = getCurrentAngle();
+      current_angle = compass->getCurrentAngle();
 
       if(getRightDistance() > getLeftDistance()){
         target_angle = current_angle + 90;

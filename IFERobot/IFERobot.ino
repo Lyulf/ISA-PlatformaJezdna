@@ -8,14 +8,17 @@
 #include <math.h>
 #include <string>
 
+SpeedSensor* speedSensor;
+Compass* compass;
+
 void setup(void) {
   // Inicjalizacja
   initUltraSoundSensor();
   initEngine();
   engineGoStraight(0);
-  SpeedSensor speedSensor = SpeedSensor::getInstance();
+  speedSensor = SpeedSensor::getInstance();
   Wire.begin();
-  qmc.init();
+  compass = Compass::getInstance();
 
   Serial1.begin(9600); // HC06
   Serial1.print("Hello Father\n");
@@ -27,29 +30,10 @@ void setup(void) {
   Serial1.print("I have awakened\n");
   
   //calculating intitial angle based on average of multiple samples
-  double initial_angle = getCurrentAngle();
+  double initial_angle = compass->getCurrentAngle();
 
   sprintf(buffer, "\n initial_angle = %f", initial_angle);
   Serial1.print(buffer);
-
-  //find 4 right angles
-
-  //hardcoded values
-  right_angles[0] = NORTH_DIR;
-  right_angles[1] = EAST_DIR;
-  right_angles[2] = SOUTH_DIR;
-  right_angles[3] = WEST_DIR;
-
-  calibrateRightAngles();
-
-  //right_angles[0] = initial_angle;
-  for (int i = 0; i < 4; i++) {
-    //right_angles[i] = initial_angle + 90 * i;
-    //right_angles[i] -= right_angles[i] > 180 ? 360 : 0;
-    
-    sprintf(buffer, "\n right_angle[%d] = %f", i, right_angles[i]);
-    Serial1.print(buffer);
-  }
 }
 
 
