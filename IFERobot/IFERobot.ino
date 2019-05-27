@@ -13,8 +13,7 @@ void setup(void) {
   initUltraSoundSensor();
   initEngine();
   engineGoStraight(0);
-  initEncoder(); 
-
+  SpeedSensor speedSensor = SpeedSensor::getInstance();
   Wire.begin();
   qmc.init();
 

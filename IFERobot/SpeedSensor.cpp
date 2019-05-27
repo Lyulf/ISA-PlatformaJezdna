@@ -1,7 +1,12 @@
 #include "SpeedSensor.h"
 #include <Wire.h>
 
-void initEncoder() {
+SpeedSensor::SpeedSensor() {
   pinMode(ENCODER_LEFT, INPUT);
   pinMode(ENCODER_RIGHT, INPUT);
+}
+
+SpeedSensor& SpeedSensor::getInstance() {
+  static SpeedSensor instance;
+  return instance;
 }

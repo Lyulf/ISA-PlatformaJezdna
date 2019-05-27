@@ -9,5 +9,10 @@
 #define ENCODER_RIGHT	51	// Enkoder prawej strony	
 
 void initEncoder();
+class SpeedSensor {
+    SpeedSensor();
+public:
+    static SpeedSensor& getInstance(); 
+};
 
 #endif
