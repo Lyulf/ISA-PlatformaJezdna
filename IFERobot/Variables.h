@@ -1,0 +1,15 @@
+#ifndef ISA_VARIABLES_H
+#define ISA_VARIABLES_H
+
+#define MAX_ANGLE_DIFFERENCE 5
+#define NUMBER_OF_INITIAL_SAMPLES 5
+#define FORWARD_POWER 120
+#define TURNING_POWER 150
+#define OBSTACLE_DISTANCE 30
+
+#define NORTH_DIR 70
+#define EAST_DIR 170
+#define SOUTH_DIR -100
+#define WEST_DIR -22
+
+#endif
