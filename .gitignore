@@ -1,0 +1,18 @@
+
+# object files
+*.[oa]
+
+# AVR executables
+*.elf
+*.hex
+
+*.vsarduino.h
+*.d
+*.o
+*.vmps.xml
+*.componentinfo.xml
+*.cppproj
+*.bin
+*.map
+*.buildinfo
+*.ipch
