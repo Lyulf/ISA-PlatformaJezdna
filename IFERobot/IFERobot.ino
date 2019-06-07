@@ -1,74 +1,62 @@
-#include "PathFinding.h"
-#include "SpeedSensor.h"
-#include "SoundSensor.h"
 #include "Compass.h"
-#include "SerialPort.h"
 #include "Engine.h"
+#include "PathAI.h"
+#include "SerialPort.h"
+#include "SoundSensor.h"
+#include "SpeedSensor.h"
 #include "Variables.h"
-#include <math.h>
-#include <string>
+
+SerialPort* serial;
+Compass* compass;
+SoundSensor* sound_sensor;
+SpeedSensor* speed_sensor;
+Engine* engine;
+PathAI* ai;
 
 void setup(void) {
   // Inicjalizacja
-  initUltraSoundSensor();
-  initEngine();
-  engineGoStraight(0);
-  initEncoder(); 
-
   Wire.begin();
-  qmc.init();
+  serial = SerialPort::getInstance();
+  compass = Compass::getInstance();
+  sound_sensor = SoundSensor::getInstance();
+  speed_sensor = SpeedSensor::getInstance();
+  engine = Engine::getInstance();
 
-  Serial1.begin(9600); // HC06
-  Serial1.print("Hello Father\n");
+  engine->straight(0);
+
+  serial->sendMsg("Hello Father\n");
 
   delay(2000);
 
   //finds initial angle based on average of measurements
 
-  Serial1.print("I have awakened\n");
+  serial->sendMsg("I have awakened\n");
   
   //calculating intitial angle based on average of multiple samples
-  double initial_angle = getCurrentAngle();
+  double initial_angle = compass->getCurrentAngle();
 
-  sprintf(buffer, "\n initial_angle = %f", initial_angle);
-  Serial1.print(buffer);
-
-  //find 4 right angles
-
-  //hardcoded values
-  right_angles[0] = NORTH_DIR;
-  right_angles[1] = EAST_DIR;
-  right_angles[2] = SOUTH_DIR;
-  right_angles[3] = WEST_DIR;
-
-  calibrateRightAngles();
-
-  //right_angles[0] = initial_angle;
-  for (int i = 0; i < 4; i++) {
-    //right_angles[i] = initial_angle + 90 * i;
-    //right_angles[i] -= right_angles[i] > 180 ? 360 : 0;
-    
-    sprintf(buffer, "\n right_angle[%d] = %f", i, right_angles[i]);
-    Serial1.print(buffer);
-  }
+  serial->sendMsg("\n initial_angle = %f", initial_angle);
+  ai = PathAI::getInstance();
 }
 
 
 void loop(void) { 
   if(Serial1.available()) {
-    readFromBluetooth();
-    handleBluetoothSerial(serial_buffer);
+    serial->readFromBluetooth();
+    auto serial_buffer = serial->getBuffer();
+    ai->handleBluetoothSerial(serial_buffer);
   }
 
   else if(!Serial.available()) {
-    serial_buffer = String("");
+    serial->clearBuffer();
   }
   
+  auto driving_mode = ai->getDrivingMode();
   if (driving_mode == 0) {
-    driveStraight();
+    ai->driveStraight();
   }
 
   else if(driving_mode == 1 || driving_mode == -1) {
-    turn(driving_mode);
+    ai->turn(driving_mode);
   }
 }

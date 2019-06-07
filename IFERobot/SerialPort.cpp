@@ -1,9 +1,11 @@
 #include "SerialPort.h"
 
-char buffer[64];
-String serial_buffer = String("");
+SerialPort::SerialPort()
+  : serial_buffer("") {
+    Serial1.begin(9600); // HC06
+  }
 
-void readFromBluetooth() {
+void SerialPort::readFromBluetooth() {
   //jeśli istnieje w serialu znak to wchodzi w loop
     //czyta pojedynczy znak w formie inta
     int bt_read_int;
@@ -13,7 +15,7 @@ void readFromBluetooth() {
     serial_buffer.trim();
 }
 
-void requestChar(char c) {
+void SerialPort::requestChar(char c) {
   while(1) {
     if(Serial1.available()){
       if (Serial1.read() == c) {
@@ -21,4 +23,17 @@ void requestChar(char c) {
       }
     }
    }
+}
+
+String SerialPort::getBuffer() {
+  return serial_buffer;
+}
+
+void SerialPort::clearBuffer() {
+  serial_buffer = String("");
+}
+
+SerialPort* SerialPort::getInstance() {
+  static SerialPort instance;
+  return &instance;
 }

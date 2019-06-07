@@ -1,13 +1,8 @@
 #include "Engine.h"
-#include "Compass.h"
-#include "SerialPort.h"
-#include "Variables.h"
-#include "SoundSensor.h"
 
-int driving_mode = 0;
-double target_angle;
-
-void initEngine() {
+Engine::Engine()
+  : compass(Compass::getInstance()),
+    serial(SerialPort::getInstance()) {
   pinMode(LEFT_PWM, OUTPUT);
   pinMode(LEFT_IN1, OUTPUT);
   pinMode(LEFT_IN2, OUTPUT);
@@ -17,18 +12,7 @@ void initEngine() {
   pinMode(RIGHT_IN2, OUTPUT);
 }
 
-void correctTargetAngle(double& angle) {
-  double tmp = 0;
-  for(int i = 0; i < 4; i++) {
-    tmp = angleDifference(angle, right_angles[i]);
-    if(fabs(tmp) <= 45) {
-      angle = right_angles[i];
-      return;
-    }
-  }
-}
-
-void setPowerLevel(EngineSelector side, int level)
+void Engine::setPowerLevel(EngineSelector side, int level)
 {
   level = constrain(level, -255, 255);
 
@@ -71,77 +55,17 @@ void setPowerLevel(EngineSelector side, int level)
   } 
 }
 
-void engineTurn(int left_axis_power, int right_axis_power) { //funkcja do latwiejszego skrecania autkiem
+void Engine::turn(int left_axis_power, int right_axis_power) { //funkcja do latwiejszego skrecania autkiem
     setPowerLevel(EngineSelector::Left, left_axis_power);
     setPowerLevel(EngineSelector::Right, right_axis_power);
 }
 
-void engineGoStraight(int both_axis_power) { //funkcja do nadawania mocy obu osiom autka na raz
+void Engine::straight(int both_axis_power) { //funkcja do nadawania mocy obu osiom autka na raz
     setPowerLevel(EngineSelector::Left, both_axis_power);
     setPowerLevel(EngineSelector::Right, both_axis_power);
 }
 
-void turn(int dir) {
-    engineTurn(TURNING_POWER * dir, -TURNING_POWER * dir);
-
-    current_angle = getCurrentAngle();
-    
-    if(fabs(angleDifference(current_angle, target_angle)) < MAX_ANGLE_DIFFERENCE){
-
-      engineGoStraight(0);
-      driving_mode = 0;
-
-      sprintf(buffer, "\n actual: %f", current_angle);
-      Serial1.print(buffer);
-
-      sprintf(buffer, "     expected: %f", target_angle);
-      Serial1.print(buffer);
-  
-      Serial1.print("\n Turning protocol concluded, resuming journey");
-  
-      delay(1000);
-    }
-}
-
-void driveStraight() {
-
-    dist = getFrontDistance();
-    
-    engineGoStraight(FORWARD_POWER);
-    
-    if (dist < OBSTACLE_DISTANCE) {
-      //filtr
-      front_obstruction_filter++;
-    }
-    else {
-      front_obstruction_filter = 0;
-    }
-
-    if (front_obstruction_filter > 3) {
-      engineGoStraight(0);
-      
-      Serial1.print("\n I see an obstacle before me");
-      delay(1000); 
-      
-      current_angle = getCurrentAngle();
-
-      if(getRightDistance() > getLeftDistance()){
-        target_angle = current_angle + 90;
-        target_angle -= target_angle > 180 ? 360 : 0;
-        driving_mode = 1;
-      }
-      else {
-        target_angle = current_angle - 90;
-        target_angle += target_angle < -180 ? 360 : 0;
-        driving_mode = -1;
-      }
-      
-      sprintf(buffer, "\n trg before: %f", target_angle);
-      Serial1.print(buffer);
-      correctTargetAngle(target_angle);
-      sprintf(buffer, "     trg after: %f", target_angle);
-      Serial1.print(buffer);
-      
-      front_obstruction_filter = 0;
-    }
+Engine* Engine::getInstance() {
+  static Engine instance;
+  return &instance;
 }

@@ -2,13 +2,30 @@
 #define ISA_COMPASS_H
 
 #include "QMC5883.h"
+#include "SerialPort.h"
 
-extern QMC5883 qmc;
-extern double right_angles[];
-extern double current_angle;
+struct Direction {
+    enum {
+        NORTH = 0,
+        EAST,
+        SOUTH,
+        WEST,
+        ALL
+    };
+};
 
-double getCurrentAngle();
-void calibrateRightAngles();
-double angleDifference(double current, double target);
+class Compass : public QMC5883 {
+    Compass();
+public:
+    double getCurrentAngle();
+    void calibrateRightAngles();
+    double getRightAngle(int direction);
+
+    static Compass* getInstance();
+
+private:
+    SerialPort* serial;
+    double right_angles[Direction::ALL];
+};
 
 #endif

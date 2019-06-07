@@ -1,32 +1,19 @@
 #include "SoundSensor.h"
 #include <Wire.h>
 
-int ultrasound_trigger_pin[] = {
-	[UltraSoundSensor::Front]	= US_FRONT_TRIGGER_PIN,
-	[UltraSoundSensor::Back]	= US_BACK_TRIGGER_PIN,
-	[UltraSoundSensor::Left]	= US_LEFT_TRIGGER_PIN,
-	[UltraSoundSensor::Right]	= US_RIGHT_TRIGGER_PIN,
-};
+SoundSensor::SoundSensor()
+  : d{0}, sum(0), id(0), distance_measured{0} { 
+  ultrasound_trigger_pin[UltraSoundSensor::Front]	= US_FRONT_TRIGGER_PIN;
+  ultrasound_trigger_pin[UltraSoundSensor::Back]	= US_BACK_TRIGGER_PIN;
+  ultrasound_trigger_pin[UltraSoundSensor::Left]	= US_LEFT_TRIGGER_PIN;
+  ultrasound_trigger_pin[UltraSoundSensor::Right]	= US_RIGHT_TRIGGER_PIN;
 
- 
-int ultrasound_echo_pin[] = {
-	[UltraSoundSensor::Front]	= US_FRONT_ECHO_PIN,
-	[UltraSoundSensor::Back]	= US_BACK_ECHO_PIN,
-	[UltraSoundSensor::Left]	= US_LEFT_ECHO_PIN,
-	[UltraSoundSensor::Right]	= US_RIGHT_ECHO_PIN,
-};
+  ultrasound_echo_pin[UltraSoundSensor::Front]	= US_FRONT_ECHO_PIN;
+  ultrasound_echo_pin[UltraSoundSensor::Back]	= US_BACK_ECHO_PIN;
+  ultrasound_echo_pin[UltraSoundSensor::Left]	= US_LEFT_ECHO_PIN;
+  ultrasound_echo_pin[UltraSoundSensor::Right]	= US_RIGHT_ECHO_PIN;
 
-int d[5] = {};
-int sum = 0;
-int id = 0;
-
-double distance_measured[20];
-int front_obstruction_filter = 0;
-int side_obstruction_filter = 0;
-int dist;
-
-void initUltraSoundSensor() {
-  for (int i = (int)UltraSoundSensor::__first; i <= (int)UltraSoundSensor::__last; i++)
+  for (int i = UltraSoundSensor::__first; i <= UltraSoundSensor::__last; i++)
   {
     pinMode(ultrasound_trigger_pin[i], OUTPUT);
     pinMode(ultrasound_echo_pin[i], INPUT);
@@ -35,7 +22,7 @@ void initUltraSoundSensor() {
   }
 }
 
-int measureSoundSpeed(int trigger_pin, int echo_pin)
+int SoundSensor::measureSoundSpeed(int trigger_pin, int echo_pin)
 {
   digitalWrite(trigger_pin, false);
   delayMicroseconds(2);
@@ -52,11 +39,11 @@ int measureSoundSpeed(int trigger_pin, int echo_pin)
   return distance;
 }
 
-int getFrontDistance() {
+int SoundSensor::getFrontDistance() {
     //zbieranie dystansu z przodu
   int dist = measureSoundSpeed(
-               ultrasound_trigger_pin[(int)UltraSoundSensor::Front],
-               ultrasound_echo_pin[(int)UltraSoundSensor::Front]);
+               ultrasound_trigger_pin[UltraSoundSensor::Front],
+               ultrasound_echo_pin[UltraSoundSensor::Front]);
 
   // średnia krocząca z pomiarów dystansu z przodu
   sum -= d[id];
@@ -67,18 +54,23 @@ int getFrontDistance() {
   return dist;
 }
 
-int getRightDistance() {
+int SoundSensor::getLeftDistance() {
   int dist = measureSoundSpeed(
-               ultrasound_trigger_pin[(int)UltraSoundSensor::Right],
-               ultrasound_echo_pin[(int)UltraSoundSensor::Right]);
+               ultrasound_trigger_pin[UltraSoundSensor::Front],
+               ultrasound_echo_pin[UltraSoundSensor::Front]);
+
+  return dist;
+}
+
+int SoundSensor::getRightDistance() {
+  int dist = measureSoundSpeed(
+               ultrasound_trigger_pin[UltraSoundSensor::Right],
+               ultrasound_echo_pin[UltraSoundSensor::Right]);
                
   return dist;
 }
 
-int getLeftDistance() {
-  int dist = measureSoundSpeed(
-               ultrasound_trigger_pin[(int)UltraSoundSensor::Front],
-               ultrasound_echo_pin[(int)UltraSoundSensor::Front]);
-
-  return dist;
+SoundSensor* SoundSensor::getInstance() {
+  static SoundSensor instance;
+  return &instance;
 }
