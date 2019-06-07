@@ -10,7 +10,8 @@ class SerialPort {
 public:
     void readFromBluetooth();
     void requestChar(const char c);
-    String getSerialBuffer();
+    String getBuffer();
+    void clearBuffer();
 
     template<class ...Args>
     void sendMsg(const String& format, Args&& ...args) {

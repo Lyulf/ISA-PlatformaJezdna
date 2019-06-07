@@ -5,8 +5,6 @@
 #include "SoundSensor.h"
 #include "SpeedSensor.h"
 #include "Variables.h"
-#include <math.h>
-#include <string>
 
 SerialPort* serial;
 Compass* compass;
@@ -14,7 +12,6 @@ SoundSensor* sound_sensor;
 SpeedSensor* speed_sensor;
 Engine* engine;
 PathAI* ai;
-int driving_mode = 0;
 
 void setup(void) {
   // Inicjalizacja
@@ -25,7 +22,7 @@ void setup(void) {
   speed_sensor = SpeedSensor::getInstance();
   engine = Engine::getInstance();
 
-  engine->engineGoStraight(0);
+  engine->straight(0);
 
   serial->sendMsg("Hello Father\n");
 
@@ -46,20 +43,20 @@ void setup(void) {
 void loop(void) { 
   if(Serial1.available()) {
     serial->readFromBluetooth();
-    auto serial_buffer = serial->getSerialBuffer();
+    auto serial_buffer = serial->getBuffer();
     ai->handleBluetoothSerial(serial_buffer);
   }
 
   else if(!Serial.available()) {
-    auto serial_buffer = serial->getSerialBuffer();
-    serial_buffer = String("");
+    serial->clearBuffer();
   }
   
+  auto driving_mode = ai->getDrivingMode();
   if (driving_mode == 0) {
-    engine->driveStraight();
+    ai->driveStraight();
   }
 
   else if(driving_mode == 1 || driving_mode == -1) {
-    engine->turn(driving_mode);
+    ai->turn(driving_mode);
   }
 }

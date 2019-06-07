@@ -37,29 +37,20 @@ enum class EngineSelector
 	Right
 };
 
-extern int driving_mode;
-
 class Engine {
 	Engine();
 public:
 	void setPowerLevel(EngineSelector side, int level);
 
-	void driveStraight();
-	void engineTurn(int left_axis_power, int right_axis_power);
-	void engineGoStraight(int both_axis_power);
+	void turn(int left_axis_power, int right_axis_power);
+	void straight(int both_axis_power);
 
-	void turn(int dir);
-	void correctTargetAngle(double& angle);
 
 	static Engine* getInstance();
 
 private:
 	SerialPort* serial;
 	Compass* compass;
-	SoundSensor* sound_sensor;
-	double target_angle;
-	int front_obstruction_filter;
-	int side_obstruction_filter;
 };
 
 #endif

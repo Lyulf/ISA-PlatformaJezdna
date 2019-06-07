@@ -25,8 +25,12 @@ void SerialPort::requestChar(char c) {
    }
 }
 
-String SerialPort::getSerialBuffer() {
+String SerialPort::getBuffer() {
   return serial_buffer;
+}
+
+void SerialPort::clearBuffer() {
+  serial_buffer = String("");
 }
 
 SerialPort* SerialPort::getInstance() {
