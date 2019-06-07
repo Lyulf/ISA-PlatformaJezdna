@@ -50,7 +50,7 @@ void loop(void) {
     ai->handleBluetoothSerial(serial_buffer);
   }
 
-  else if(!Serial.available()) {
+  else if(!Serial1.available()) {
     serial->clearSerialBuffer();
   }
   
