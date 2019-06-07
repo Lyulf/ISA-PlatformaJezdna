@@ -17,21 +17,29 @@ void PathAI::handleBluetoothSerial(String bt_command) {
   //zmieniamy nasza komende na int'a, przyda nam sie to, jesli inputem był rzeczywiscie numer
   //right_angles[i] -= right_angles[i] > 180 ? 360 : 0;
 //  int command_int = bt_command.toInt(); 
-
+  auto serial_buffer = serial->getBuffer();
   if(bt_command == String("north")) {
     Serial1.flush();
+    serial->clearBuffer();
+    serial->sendMsg("Going NORTH\n");
     driving_tendency_angle = compass->getRightAngle(Direction::NORTH);
   }
   else if(bt_command == String("east")) {
     Serial1.flush();
+    serial->clearBuffer();
+    serial->sendMsg("Going EAST\n");
     driving_tendency_angle = compass->getRightAngle(Direction::EAST);
   }
   else if(bt_command == String("south")) {
     Serial1.flush();
+    serial->clearBuffer();
+    serial->sendMsg("Going SOUTH\n");
     driving_tendency_angle = compass->getRightAngle(Direction::SOUTH);
   }
   else if(bt_command == String("west")) {
     Serial1.flush();
+    serial->clearBuffer();
+    serial->sendMsg("Going WEST\n");
     driving_tendency_angle = compass->getRightAngle(Direction::WEST);
   }
   /*

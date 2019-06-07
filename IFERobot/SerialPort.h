@@ -2,7 +2,7 @@
 #define ISA_SERIAL_PORT_H
 
 #include <Arduino.h>
-#include <cstdio>
+#include <stdio.h>
 #include <utility>
 
 class SerialPort {
