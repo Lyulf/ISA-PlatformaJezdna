@@ -2,7 +2,7 @@
 #include <Wire.h>
 
 SoundSensor::SoundSensor()
-  : d{0}, sum(0), id(0), distance_measured{0} { 
+  : distance_measured{0} { 
   ultrasound_trigger_pin[UltraSoundSensor::Front]	= US_FRONT_TRIGGER_PIN;
   ultrasound_trigger_pin[UltraSoundSensor::Back]	= US_BACK_TRIGGER_PIN;
   ultrasound_trigger_pin[UltraSoundSensor::Left]	= US_LEFT_TRIGGER_PIN;
@@ -40,12 +40,15 @@ int SoundSensor::measureSoundSpeed(int trigger_pin, int echo_pin)
 }
 
 int SoundSensor::getFrontDistance() {
+  // średnia krocząca z pomiarów dystansu z przodu
+  static int sum = 0;
+	static int d[5] = { 0 };
+	static int id = 0;
     //zbieranie dystansu z przodu
   int dist = measureSoundSpeed(
                ultrasound_trigger_pin[UltraSoundSensor::Front],
                ultrasound_echo_pin[UltraSoundSensor::Front]);
 
-  // średnia krocząca z pomiarów dystansu z przodu
   sum -= d[id];
   sum += d[id] = dist;
   id = (id + 1) % 5;
@@ -55,17 +58,38 @@ int SoundSensor::getFrontDistance() {
 }
 
 int SoundSensor::getLeftDistance() {
-  int dist = measureSoundSpeed(
-               ultrasound_trigger_pin[UltraSoundSensor::Front],
-               ultrasound_echo_pin[UltraSoundSensor::Front]);
+  // średnia krocząca z pomiarów dystansu z lewej strony
+  static int sum = 0;
+	static int d[5] = { 0 };
+	static int id = 0;
 
+  //zbieranie dystansu z lewej strony
+  int dist = measureSoundSpeed(
+               ultrasound_trigger_pin[UltraSoundSensor::Left],
+               ultrasound_echo_pin[UltraSoundSensor::Left]);
+
+  sum -= d[id];
+  sum += d[id] = dist;
+  id = (id + 1) % 5;
+  dist = sum / 5;
   return dist;
 }
 
 int SoundSensor::getRightDistance() {
+  // średnia krocząca z pomiarów dystansu z prawej strony
+  static int sum = 0;
+	static int d[5] = { 0 };
+	static int id = 0;
+
+  //zbieranie dystansu z prawej strony
   int dist = measureSoundSpeed(
                ultrasound_trigger_pin[UltraSoundSensor::Right],
                ultrasound_echo_pin[UltraSoundSensor::Right]);
+
+  sum -= d[id];
+  sum += d[id] = dist;
+  id = (id + 1) % 5;
+  dist = sum / 5;
                
   return dist;
 }

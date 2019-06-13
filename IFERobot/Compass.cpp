@@ -38,18 +38,26 @@ double Compass::getCurrentAngle() {
 }
 
 void Compass::calibrateRightAngles() {
+  if(getCurrentAngle() == -135.0) {
+    serial->sendMsg("\n WARNING: THE COMPASS SEEMS TO BE BROKEN");
+  }
   serial->sendRequest("\n please point me north and type: '+'");
   right_angles[Direction::NORTH] = getCurrentAngle();
+  serial->sendMsg("\n north =\t%f", right_angles[Direction::NORTH]);
 
   serial->sendRequest("\n please point me east and type '+'");
   right_angles[Direction::EAST] = getCurrentAngle();
+  serial->sendMsg("\n east =\t%f", right_angles[Direction::EAST]);
 
   serial->sendRequest("\n please point me south and type '+'");
   right_angles[Direction::SOUTH] = getCurrentAngle();
+  serial->sendMsg("\n south =\t%f", right_angles[Direction::SOUTH]);
 
   serial->sendRequest("\n please point me west and type '+'");
   right_angles[Direction::WEST] = getCurrentAngle();
-  
+  serial->sendMsg("\n west =\t%f", right_angles[Direction::WEST]);
+
+  serial->sendRequest("\n please point me north again and type '+'");
 }
 
 double Compass::getRightAngle(int direction) {

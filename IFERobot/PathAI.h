@@ -6,6 +6,7 @@
 #include "Engine.h"
 #include "SoundSensor.h"
 #include <Arduino.h>
+#include "Stack.h"
 
 class PathAI {
     PathAI();
@@ -24,6 +25,7 @@ private:
     Compass* compass;
     Engine* engine;
 	SoundSensor* sound_sensor;
+    Stack directions;
     double driving_tendency_angle;
 	double target_angle;
 	int front_obstruction_filter;

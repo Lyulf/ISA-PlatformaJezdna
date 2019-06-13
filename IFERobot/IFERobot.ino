@@ -17,6 +17,9 @@ void setup(void) {
   // Inicjalizacja
   Wire.begin();
   serial = SerialPort::getInstance();
+  serial->sendMsg("Hello Father\n");
+  serial->sendMsg("I have awakened\n");
+
   compass = Compass::getInstance();
   sound_sensor = SoundSensor::getInstance();
   speed_sensor = SpeedSensor::getInstance();
@@ -24,18 +27,13 @@ void setup(void) {
 
   engine->straight(0);
 
-  serial->sendMsg("Hello Father\n");
-
   delay(2000);
 
-  //finds initial angle based on average of measurements
-
-  serial->sendMsg("I have awakened\n");
-  
   //calculating intitial angle based on average of multiple samples
   double initial_angle = compass->getCurrentAngle();
 
   serial->sendMsg("\n initial_angle = %f", initial_angle);
+  serial->sendMsg("\n my journey begins");
   ai = PathAI::getInstance();
 }
 
@@ -50,6 +48,8 @@ void loop(void) {
   else if(!Serial.available()) {
     serial->clearBuffer();
   }
+
+  // serial->sendMsg("\nangle=%f", compass->getCurrentAngle());
   
   auto driving_mode = ai->getDrivingMode();
   if (driving_mode == 0) {

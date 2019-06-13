@@ -50,10 +50,7 @@ private:
 	int ultrasound_trigger_pin[UltraSoundSensor::All];
 	int ultrasound_echo_pin[UltraSoundSensor::All];
 
-	int d[5];
 	double distance_measured[20];
-	int sum;
-	int id;
 
 }; 
 
