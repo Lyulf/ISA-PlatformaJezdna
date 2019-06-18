@@ -45,7 +45,6 @@ void loop(void) {
 
 
   if(Serial1.available()) { 
-    serial->sendMsg("\nA może jednak");
     serial->readFromBluetooth();
   }
   
@@ -59,4 +58,5 @@ void loop(void) {
 }
 
 void serialEvent() {
+  serial->sendMsg("\nSerial Event just works");
 }

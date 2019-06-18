@@ -5,12 +5,12 @@
  jeśli difference(diff*/
 double angleDifference(double current, double target) {
   double diff = target - current;
-  // if (diff > 180) {
-  //   diff = diff - 360;
-  // }
-  // else if (diff < -180) {
-  //   diff = diff + 360;
-  // }
-  // return diff;
-  return fmod(diff, 180.0);
+  if (diff > 180) {
+    diff = diff - 360;
+  }
+  else if (diff < -180) {
+    diff = diff + 360;
+  }
+  return diff;
+  // return fmod(diff, 180.0);
 }

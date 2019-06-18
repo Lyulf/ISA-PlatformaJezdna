@@ -21,7 +21,8 @@ void PathAI::handleBluetoothSerial(String bt_command) {
   //zmieniamy nasza komende na int'a, przyda nam sie to, jesli inputem był rzeczywiscie numer
   //right_angles[i] -= right_angles[i] > 180 ? 360 : 0;
 //  int command_int = bt_command.toInt(); 
-  auto serial_buffer = serial->getBuffer();
+  // auto serial_buffer = serial->getBuffer();
+  bt_command.toLowerCase();
   if(bt_command == String("north")) {
     // Serial1.flush();
     // serial->clearBuffer();
@@ -68,7 +69,7 @@ void PathAI::drive() {
   auto time_diff = std::max(current_time, last_time) - std::min(current_time, last_time);
   last_time = current_time;
 
-  if(time_diff > wait_ms) {
+  if(time_diff < wait_ms) {
     wait_ms -= time_diff;
   } else {
     wait_ms = 0;
@@ -130,13 +131,14 @@ void PathAI::drive() {
 
         if(dist > OBSTACLE_DISTANCE_SIDE) {
           if(dir == LEFT_DIR) {
-            target_angle = fmod(current_angle + 90, 180);
-            // target_angle -= target_angle > 180 ? 360 : 0;
+            target_angle = current_angle - 90;
+            target_angle += target_angle < -180 ? 360 : 0;
             driving_mode = DM::TurningRight;
           }
           else {
-            target_angle = fmod(current_angle - 90, 180);
-            // target_angle += target_angle < -180 ? 360 : 0;
+            target_angle = current_angle + 90;
+            target_angle -= target_angle > 180 ? 360 : 0;
+            // target_angle = fmod(current_angle - 90, 180);
             driving_mode = DM::TurningLeft;
           }
           directions.pop();
@@ -159,13 +161,18 @@ void PathAI::drive() {
   // if (front_obstruction_filter > 3) {
     // delay(1000); 
 
-    if(sound_sensor->getRightDistance() > sound_sensor->getLeftDistance()){
-      target_angle = fmod(current_angle + 90, 180);
-      // target_angle -= target_angle > 180 ? 360 : 0;
+    auto left_dist = sound_sensor->getLeftDistance();
+    auto right_dist = sound_sensor->getRightDistance();
+    serial->sendMsg("\nleft = %d right = %d", left_dist, right_dist);
+    if(right_dist > left_dist) {
+      serial->sendMsg("\nturning right");
+      target_angle = current_angle + 90;
+      target_angle -= target_angle > 180 ? 360 : 0;
       directions.push(RIGHT_DIR);
       driving_mode = DM::TurningRight;
     }
     else {
+      serial->sendMsg("\nturning left");
       target_angle = fmod(current_angle - 90, 180);
       // target_angle += target_angle < -180 ? 360 : 0;
       directions.push(LEFT_DIR);

@@ -11,7 +11,6 @@ void SerialPort::readFromBluetooth() {
     int bt_read_int;
     bt_read_int = Serial1.read();
     char c = (char) bt_read_int;
-    sendMsg("\n%c, %s, %d", c, buffer, buffer_pos);
     if(isspace(bt_read_int)) {
       if(c == '\n') {
         finishReading();
