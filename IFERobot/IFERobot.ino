@@ -5,7 +5,6 @@
 #include "SoundSensor.h"
 #include "SpeedSensor.h"
 #include "Variables.h"
-
 SerialPort* serial;
 Compass* compass;
 SoundSensor* sound_sensor;

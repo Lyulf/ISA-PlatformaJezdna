@@ -11,7 +11,42 @@ PathAI::PathAI()
     sound_sensor(SoundSensor::getInstance()),
     directions(),
     driving_mode(DM::DrivingStraight),
-    wait_ms(0) { }
+    wait_ms(0),
+    fuzzy(new Fuzzy()) {
+      FuzzyInput* distance = new FuzzyInput(1);
+      FuzzySet* near = new FuzzySet(0, 0, 60, 90);
+      FuzzySet* far = new FuzzySet(60, 90, 255, 255);
+
+      distance->addFuzzySet(near);
+      distance->addFuzzySet(far);
+      fuzzy->addFuzzyInput(distance);
+
+      FuzzyOutput* power = new FuzzyOutput(1);
+      FuzzySet* low = new FuzzySet(0, 0, 180, 200);
+      FuzzySet* high = new FuzzySet(180, 200, 270, 270);
+
+      power->addFuzzySet(low);
+      power->addFuzzySet(high);
+      fuzzy->addFuzzyOutput(power);
+
+      FuzzyRuleAntecedent* ifDistanceNear = new FuzzyRuleAntecedent();
+      ifDistanceNear->joinSingle(near);
+
+      FuzzyRuleConsequent* thenPowerLow = new FuzzyRuleConsequent();
+      thenPowerLow->addOutput(low);
+
+      FuzzyRuleAntecedent* ifDistanceFar = new FuzzyRuleAntecedent();
+      ifDistanceFar->joinSingle(far);
+
+      FuzzyRuleConsequent* thenPowerHigh = new FuzzyRuleConsequent();
+      thenPowerHigh->addOutput(high);
+
+      FuzzyRule* fuzzyRule1 = new FuzzyRule(1, ifDistanceNear, thenPowerLow);
+      fuzzy->addFuzzyRule(fuzzyRule1);
+
+      FuzzyRule* fuzzyRule2 = new FuzzyRule(2, ifDistanceFar, thenPowerHigh);
+      fuzzy->addFuzzyRule(fuzzyRule2);
+    }
 
 void PathAI::handleBluetoothSerial(String bt_command) {
   //bt_command to będzie komenda zczytana z bluetootha i na jej podstawie okreslamy nasz nowy kierunek jazdy
@@ -213,7 +248,12 @@ void PathAI::turn(int dir) {
 }
 
 void PathAI::driveStraight() {
-  engine->straight(FORWARD_POWER);
+  auto dist = sound_sensor->getFrontDistance();
+  fuzzy->setInput(1, dist);
+  fuzzy->fuzzify();
+  // serial->sendMsg("\nPower = %4.0f, Dist = %5d", fuzzy->defuzzify(1), dist);
+  engine->straight(fuzzy->defuzzify(1));
+  // engine->straight(FORWARD_POWER);
 }
 
 void PathAI::stop() {

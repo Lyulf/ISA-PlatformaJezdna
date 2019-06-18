@@ -8,6 +8,7 @@
 #include <Arduino.h>
 #include "Stack.h"
 #include <cstdint>
+#include <Fuzzy.h>
 
 struct DrivingMode {
     enum Mode {
@@ -43,6 +44,7 @@ private:
 	double target_angle;
     DrivingMode::Mode driving_mode;
     unsigned int wait_ms;
+    Fuzzy* fuzzy;
 };
 
 #endif
