@@ -130,14 +130,17 @@ void PathAI::drive() {
         }
 
         if(dist > OBSTACLE_DISTANCE_SIDE) {
+          serial->sendMsg("\ndist = %d", dist);
           if(dir == LEFT_DIR) {
-            target_angle = current_angle - 90;
-            target_angle += target_angle < -180 ? 360 : 0;
+            serial->sendMsg("\nturning right");
+            target_angle = current_angle + 90;
+            target_angle -= target_angle > 180 ? 360 : 0;
             driving_mode = DM::TurningRight;
           }
           else {
-            target_angle = current_angle + 90;
-            target_angle -= target_angle > 180 ? 360 : 0;
+            serial->sendMsg("\nturning left");
+            target_angle = current_angle - 90;
+            target_angle += target_angle < -180 ? 360 : 0;
             // target_angle = fmod(current_angle - 90, 180);
             driving_mode = DM::TurningLeft;
           }
@@ -173,8 +176,9 @@ void PathAI::drive() {
     }
     else {
       serial->sendMsg("\nturning left");
-      target_angle = fmod(current_angle - 90, 180);
-      // target_angle += target_angle < -180 ? 360 : 0;
+      // target_angle = fmod(current_angle - 90, 180);
+      target_angle = current_angle - 90;
+      target_angle += target_angle < -180 ? 360 : 0;
       directions.push(LEFT_DIR);
       driving_mode = DM::TurningLeft;
     }
