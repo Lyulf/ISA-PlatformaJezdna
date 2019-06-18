@@ -40,20 +40,16 @@ void setup(void) {
 
 void loop(void) { 
   // serial->sendMsg("\nangle=%f", compass->getCurrentAngle());
+  compass->update();
+  sound_sensor->update();
+
   auto serial_buffer = serial->getBuffer();
   if(serial_buffer) {
     serial->clearBuffer();
     ai->handleBluetoothSerial(serial_buffer);
   }
   
-  auto driving_mode = ai->getDrivingMode();
-  if (driving_mode == 0) {
-    ai->driveStraight();
-  }
-
-  else if(driving_mode == 1 || driving_mode == -1) {
-    ai->turn(driving_mode);
-  }
+  ai->drive();
 }
 
 void SerialEvent() {

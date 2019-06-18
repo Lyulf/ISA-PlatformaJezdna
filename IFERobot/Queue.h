@@ -9,7 +9,7 @@ class Queue : public PushPopContainer<T> {
     const std::size_t max_size;
 public:
     Queue()
-        : max_size(N + 1), data(), head(0), tail(0) { }
+        : max_size(N + 1), data(), head(0), tail(0), sum(0) { }
 
     T operator[](std::size_t pos) {
         if(pos >= size()) {
@@ -22,6 +22,7 @@ public:
 
     void push(T value) {
         if(!full()) {
+            sum += value;
             data[tail++] = value;
             tail %= max_size;
         }
@@ -29,6 +30,7 @@ public:
 
     void pop() {
         if(!empty()) {
+            sum -= data[head];
             head = ++head % max_size;
         }
 
@@ -46,10 +48,6 @@ public:
         auto n = size();
         if(n == 0) {
             return T();
-        }
-        T sum = T();
-        for(std::size_t i = head; i != tail; ++i % max_size) {
-            sum += data[i];
         }
         return sum / n;
     }
@@ -73,6 +71,7 @@ public:
 private:
     std::array<T, N + 1> data;
     std::size_t head, tail;
+    T sum;
 };
 
 #endif

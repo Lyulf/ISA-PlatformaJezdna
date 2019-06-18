@@ -7,20 +7,33 @@
 #include "SoundSensor.h"
 #include <Arduino.h>
 #include "Stack.h"
+#include <cstdint>
+
+struct DrivingMode {
+    enum Mode {
+        Stopping,
+        DrivingStraight,
+        TurningLeft,
+        TurningRight,
+        LookingForPath
+    };
+};
 
 class PathAI {
     PathAI();
 public:
     void handleBluetoothSerial(String bt_command);
-
-	void driveStraight();
-	void turn(int dir);
-	void correctTargetAngle(double& angle);
+    void drive();
     int getDrivingMode();
 
     static PathAI* getInstance();
 
 private:
+	void driveStraight();
+	void turn(int dir);
+    void stop();
+	void correctTargetAngle(double& angle);
+
     SerialPort* serial;
     Compass* compass;
     Engine* engine;
@@ -28,9 +41,8 @@ private:
     Stack directions;
     double driving_tendency_angle;
 	double target_angle;
-	int front_obstruction_filter;
-	int side_obstruction_filter;
-    int driving_mode = 0;
+    DrivingMode::Mode driving_mode;
+    unsigned int wait_ms;
 };
 
 #endif

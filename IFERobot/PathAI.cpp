@@ -1,14 +1,17 @@
 #include "PathAI.h"
 #include "Utils.h"
 #include "Variables.h"
+#include <algorithm>
+
+using DM = DrivingMode;
 
 PathAI::PathAI()
   : compass(Compass::getInstance()),
     serial(SerialPort::getInstance()),
     sound_sensor(SoundSensor::getInstance()),
-    front_obstruction_filter(0),
-    side_obstruction_filter(0),
-    directions() { }
+    directions(),
+    driving_mode(DM::DrivingStraight),
+    wait_ms(0) { }
 
 void PathAI::handleBluetoothSerial(String bt_command) {
   //bt_command to będzie komenda zczytana z bluetootha i na jej podstawie okreslamy nasz nowy kierunek jazdy
@@ -20,26 +23,26 @@ void PathAI::handleBluetoothSerial(String bt_command) {
 //  int command_int = bt_command.toInt(); 
   auto serial_buffer = serial->getBuffer();
   if(bt_command == String("north")) {
-    Serial1.flush();
-    serial->clearBuffer();
+    // Serial1.flush();
+    // serial->clearBuffer();
     serial->sendMsg("Going NORTH\n");
     driving_tendency_angle = compass->getRightAngle(Direction::NORTH);
   }
   else if(bt_command == String("east")) {
-    Serial1.flush();
-    serial->clearBuffer();
+    // Serial1.flush();
+    // serial->clearBuffer();
     serial->sendMsg("Going EAST\n");
     driving_tendency_angle = compass->getRightAngle(Direction::EAST);
   }
   else if(bt_command == String("south")) {
-    Serial1.flush();
-    serial->clearBuffer();
+    // Serial1.flush();
+    // serial->clearBuffer();
     serial->sendMsg("Going SOUTH\n");
     driving_tendency_angle = compass->getRightAngle(Direction::SOUTH);
   }
   else if(bt_command == String("west")) {
-    Serial1.flush();
-    serial->clearBuffer();
+    // Serial1.flush();
+    // serial->clearBuffer();
     serial->sendMsg("Going WEST\n");
     driving_tendency_angle = compass->getRightAngle(Direction::WEST);
   }
@@ -59,121 +62,151 @@ void PathAI::handleBluetoothSerial(String bt_command) {
   }*/
 }
 
-void PathAI::turn(int dir) {
+void PathAI::drive() {
+  static auto last_time = millis();
+  auto current_time = millis();
+  auto time_diff = std::max(current_time, last_time) - std::min(current_time, last_time);
+  last_time = current_time;
 
-  sound_sensor->getFrontDistance();
-  sound_sensor->getLeftDistance();
-  sound_sensor->getRightDistance();
+  if(time_diff > wait_ms) {
+    wait_ms -= time_diff;
+  } else {
+    wait_ms = 0;
+  }
 
-  engine->turn(TURNING_POWER * dir, -TURNING_POWER * dir);
+  if(wait_ms) {
+    return;
+  }
 
-  auto current_angle = compass->getCurrentAngle();
+  int dist;
+  if (driving_mode == DM::DrivingStraight) {
+      // if(directions.getSize()) {
+      //   if(directions.peek() == RIGHT_DIR) {
+      //     dist = sound_sensor->getLeftDistance();
+      //   } else {
+      //     dist = sound_sensor->getRightDistance();
+      //   }
+      //   if (dist > OBSTACLE_DISTANCE_SIDE) {
+        //   //filtr
+        //   side_obstruction_filter++;
+        // }
+        // else {
+        //   side_obstruction_filter = 0;
+        // }
+        // if (side_obstruction_filter > 3) {
+          // serial->sendMsg("\nside_dist=%f", dist);
+          // stop();
+          // if(directions.peek() == RIGHT_DIR) {
+          //   serial->sendMsg("\n I see a path to my left");
+          // } else {
+          //   serial->sendMsg("\n I see a path to my right");
+          // }
+          // delay(1000); 
+
     
-  if(fabs(angleDifference(current_angle, target_angle)) < MAX_ANGLE_DIFFERENCE){
-
-    engine->straight(0);
-    driving_mode = 0;
-
-    serial->sendMsg("\n actual: %f", current_angle);
-
-    serial->sendMsg("     expected: %f", target_angle);
-    serial->sendMsg("\n Turning protocol concluded, resuming journey");
-  
-    delay(1000);
-  }
-}
-
-void PathAI::driveStraight() {
-  sound_sensor->getFrontDistance();
-  sound_sensor->getLeftDistance();
-  sound_sensor->getRightDistance();
-
-  auto dist = sound_sensor->getFrontDistance();
-  
-  engine->straight(FORWARD_POWER);
-  
-  if (dist < OBSTACLE_DISTANCE_FRONT) {
-    //filtr
-    front_obstruction_filter++;
-  }
-  else {
-    front_obstruction_filter = 0;
-  }
-
-  if (front_obstruction_filter > 3) {
-    serial->sendMsg("\nfront_dist=%f", dist);
-    engine->straight(0);
-    
-    serial->sendMsg("\n I see an obstacle before me");
-    delay(1000); 
-
+          // side_obstruction_filter = 0;
+          // return;
+        // }
+      // }
+      dist = sound_sensor->getFrontDistance();
+      if(dist < OBSTACLE_DISTANCE_FRONT) {
+        stop();
+        serial->sendMsg("\nfront_dist=%f", dist);
+        serial->sendMsg("\n I see an obstacle before me");
+        driving_mode = DrivingMode::LookingForPath;
+        wait_ms = 1000;
+      } else {
+        driveStraight();
+      }
+  } else if(driving_mode == DrivingMode::LookingForPath) {
     auto current_angle = compass->getCurrentAngle();
+    if(!directions.empty()) {
+      auto dir = directions.peek();
+        if(dir == RIGHT_DIR) {
+          dist = sound_sensor->getLeftDistance();
+        } else {
+          dist = sound_sensor->getRightDistance();
+        }
+
+        if(dist > OBSTACLE_DISTANCE_SIDE) {
+          if(dir == LEFT_DIR) {
+            target_angle = fmod(current_angle + 90, 180);
+            // target_angle -= target_angle > 180 ? 360 : 0;
+            driving_mode = DM::TurningRight;
+          }
+          else {
+            target_angle = fmod(current_angle - 90, 180);
+            // target_angle += target_angle < -180 ? 360 : 0;
+            driving_mode = DM::TurningLeft;
+          }
+          directions.pop();
+          serial->sendMsg("\n trg before: %f", target_angle);
+          correctTargetAngle(target_angle);
+          serial->sendMsg("     trg after: %f", target_angle);
+          return;
+        }
+    }
+
+    // dist = sound_sensor->getFrontDistance();
+    // if (dist < OBSTACLE_DISTANCE_FRONT) {
+      //   //filtr
+      //   front_obstruction_filter++;
+    // }
+  // else {
+  //   front_obstruction_filter = 0;
+  // }
+
+  // if (front_obstruction_filter > 3) {
+    // delay(1000); 
 
     if(sound_sensor->getRightDistance() > sound_sensor->getLeftDistance()){
-      target_angle = current_angle + 90;
-      target_angle -= target_angle > 180 ? 360 : 0;
-      directions.push(1);
-      driving_mode = 1;
+      target_angle = fmod(current_angle + 90, 180);
+      // target_angle -= target_angle > 180 ? 360 : 0;
+      directions.push(RIGHT_DIR);
+      driving_mode = DM::TurningRight;
     }
     else {
-      target_angle = current_angle - 90;
-      target_angle += target_angle < -180 ? 360 : 0;
-      directions.push(-1);
-      driving_mode = -1;
+      target_angle = fmod(current_angle - 90, 180);
+      // target_angle += target_angle < -180 ? 360 : 0;
+      directions.push(LEFT_DIR);
+      driving_mode = DM::TurningLeft;
     }
     
     serial->sendMsg("\n trg before: %f", target_angle);
     correctTargetAngle(target_angle);
     serial->sendMsg("     trg after: %f", target_angle);
     
-    front_obstruction_filter = 0;
-  }
+    // front_obstruction_filter = 0;
+  // }
 
-  if(directions.getSize()) {
-    if(directions.peek() == 1) {
-      dist = sound_sensor->getLeftDistance();
+  } else if(driving_mode == DM::TurningLeft || driving_mode == DM::TurningRight) {
+    auto current_angle = compass->getCurrentAngle();
+    if(fabs(angleDifference(current_angle, target_angle)) < MAX_ANGLE_DIFFERENCE){
+      stop();
+      driving_mode = DM::DrivingStraight;
+
+      serial->sendMsg("\n actual: %f     expected: %f", current_angle, target_angle);
+      serial->sendMsg("\n Turning protocol concluded, resuming journey");
+      wait_ms = 1000;
     } else {
-      dist = sound_sensor->getRightDistance();
+      int dir = driving_mode == DM::TurningLeft ? LEFT_DIR : RIGHT_DIR;
+      turn(dir);
     }
-    if (dist < OBSTACLE_DISTANCE_SIDE) {
-      //filtr
-      side_obstruction_filter++;
-    }
-    else {
-      side_obstruction_filter = 0;
-    }
-    if (side_obstruction_filter > 3) {
-      serial->sendMsg("\nside_dist=%f", dist);
-      engine->straight(0);
-      if(directions.peek() == 1) {
-        serial->sendMsg("\n I see a path to my left");
-      } else {
-        serial->sendMsg("\n I see a path to my right");
-      }
-      delay(1000); 
-
-      auto current_angle = compass->getCurrentAngle();
-
-      if(directions.peek() == -1) {
-        target_angle = current_angle + 90;
-        target_angle -= target_angle > 180 ? 360 : 0;
-        directions.pop();
-        driving_mode = 1;
-      }
-      else {
-        target_angle = current_angle - 90;
-        target_angle += target_angle < -180 ? 360 : 0;
-        directions.pop();
-        driving_mode = -1;
-      }
-    
-      serial->sendMsg("\n trg before: %f", target_angle);
-      correctTargetAngle(target_angle);
-      serial->sendMsg("     trg after: %f", target_angle);
-    
-      side_obstruction_filter = 0;
-    }
+  } else {
+    stop();
   }
+}
+
+void PathAI::turn(int dir) {
+  engine->turn(TURNING_POWER * dir, -TURNING_POWER * dir);
+}
+
+void PathAI::driveStraight() {
+  engine->straight(FORWARD_POWER);
+}
+
+void PathAI::stop() {
+  engine->straight(0);
 }
 
 void PathAI::correctTargetAngle(double& angle) {
