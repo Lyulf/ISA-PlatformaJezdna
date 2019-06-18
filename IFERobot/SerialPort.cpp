@@ -1,7 +1,7 @@
 #include "SerialPort.h"
 
 SerialPort::SerialPort()
-  : serial_buffer("") {
+  : serial_buffer(""), buffer(), buffer_pos(0) {
     Serial1.begin(9600); // HC06
   }
 
@@ -10,9 +10,22 @@ void SerialPort::readFromBluetooth() {
     //czyta pojedynczy znak w formie inta
     int bt_read_int;
     bt_read_int = Serial1.read();
-    serial_buffer += (char)bt_read_int;
-    serial_buffer.toLowerCase();
-    serial_buffer.trim();
+    char c = (char) bt_read_int;
+    if(isspace(bt_read_int)) {
+      if(c == '\n') {
+        finishReading();
+      }
+      return;
+    }
+    buffer[buffer_pos++] = tolower(bt_read_int);
+    if(buffer_pos == SERIAL_BUFFER_SIZE) {
+      finishReading();
+    }
+}
+
+void SerialPort::finishReading() {
+      serial_buffer = buffer;
+      buffer_pos = 0;
 }
 
 void SerialPort::requestChar(char c) {

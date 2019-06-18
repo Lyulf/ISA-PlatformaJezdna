@@ -1,4 +1,5 @@
 #include "Utils.h"
+#include <cmath>
 
 /* Funkcja zwracająca kąt który samochód musi się obrócić na podstawie
  jeśli difference(diff*/
@@ -11,4 +12,5 @@ double angleDifference(double current, double target) {
     diff = diff + 360;
   }
   return diff;
+  // return fmod(diff, 180.0);
 }

@@ -17,6 +17,9 @@ void setup(void) {
   // Inicjalizacja
   Wire.begin();
   serial = SerialPort::getInstance();
+  serial->sendMsg("Hello Father\n");
+  serial->sendMsg("I have awakened\n");
+
   compass = Compass::getInstance();
   sound_sensor = SoundSensor::getInstance();
   speed_sensor = SpeedSensor::getInstance();
@@ -24,39 +27,36 @@ void setup(void) {
 
   engine->straight(0);
 
-  serial->sendMsg("Hello Father\n");
-
   delay(2000);
 
-  //finds initial angle based on average of measurements
-
-  serial->sendMsg("I have awakened\n");
-  
   //calculating intitial angle based on average of multiple samples
   double initial_angle = compass->getCurrentAngle();
 
   serial->sendMsg("\n initial_angle = %f", initial_angle);
+  serial->sendMsg("\n my journey begins");
   ai = PathAI::getInstance();
 }
 
 
 void loop(void) { 
-  if(Serial1.available()) {
-    serial->readFromBluetooth();
-    auto serial_buffer = serial->getBuffer();
-    ai->handleBluetoothSerial(serial_buffer);
-  }
+  // serial->sendMsg("\nangle=%f", compass->getCurrentAngle());
+  compass->update();
+  sound_sensor->update();
 
-  else if(!Serial.available()) {
-    serial->clearBuffer();
+
+  if(Serial1.available()) { 
+    serial->readFromBluetooth();
   }
   
-  auto driving_mode = ai->getDrivingMode();
-  if (driving_mode == 0) {
-    ai->driveStraight();
+  auto serial_buffer = serial->getBuffer();
+  if(serial_buffer) {
+    serial->clearBuffer();
+    ai->handleBluetoothSerial(serial_buffer);
   }
+  
+  ai->drive();
+}
 
-  else if(driving_mode == 1 || driving_mode == -1) {
-    ai->turn(driving_mode);
-  }
+void serialEvent() {
+  serial->sendMsg("\nSerial Event just works");
 }

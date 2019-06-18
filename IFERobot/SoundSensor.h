@@ -6,6 +6,9 @@
  * Moduł HC-SR04
  */
 
+#include "Queue.h"
+#include "Variables.h"
+
 #define US_FRONT				0
 #define US_FRONT_TRIGGER_PIN	8
 #define US_FRONT_ECHO_PIN		9
@@ -40,21 +43,26 @@ class SoundSensor {
 	SoundSensor();
 public:
 	int measureSoundSpeed(int trigger_pin, int echo_pin);
-	int getFrontDistance();
-	int getLeftDistance();
-	int getRightDistance();
+	int getFrontDistance() const;
+	int getBackDistance() const;
+	int getLeftDistance() const;
+	int getRightDistance() const;
 
+	void update();
 	static SoundSensor* getInstance();
 
 private:
+	void updateFront();
+	void updateBack();
+	void updateLeft();
+	void updateRight();
+
 	int ultrasound_trigger_pin[UltraSoundSensor::All];
 	int ultrasound_echo_pin[UltraSoundSensor::All];
-
-	int d[5];
-	double distance_measured[20];
-	int sum;
-	int id;
-
+	Queue<int, SOUND_SENSOR_BUFFER_SIZE> front_buffer;
+	Queue<int, SOUND_SENSOR_BUFFER_SIZE> back_buffer;
+	Queue<int, SOUND_SENSOR_BUFFER_SIZE> left_buffer;
+	Queue<int, SOUND_SENSOR_BUFFER_SIZE> right_buffer;
 }; 
 
 #endif

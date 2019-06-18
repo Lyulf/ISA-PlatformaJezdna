@@ -1,11 +1,13 @@
 #include "Compass.h"
+#include "Utils.h"
 #include "Variables.h"
 #include <math.h>
 #include <string>
 
 Compass::Compass()
-  : serial(SerialPort::getInstance()) {
+  : serial(SerialPort::getInstance()), angle_buffer() {
   QMC5883::init();
+  update();
   //hardcoded values
   right_angles[Direction::NORTH] = NORTH_DIR;
   right_angles[Direction::EAST] = EAST_DIR;
@@ -25,31 +27,34 @@ Compass::Compass()
 };
 
 double Compass::getCurrentAngle() {
-  double avg_angle = 0;
-  for (int i = 0; i < NUMBER_OF_INITIAL_SAMPLES; i++) {
-    measure();
-    int16_t x = getX();
-    int16_t y = getY();
-    avg_angle += (atan2(x, y) * 180 / PI);
-    //delay(10);
-  }
-
- return avg_angle / NUMBER_OF_INITIAL_SAMPLES;
+  return angle_buffer.avg();
 }
 
 void Compass::calibrateRightAngles() {
+  if(getCurrentAngle() == -135.0) {
+    serial->sendMsg("\n WARNING: THE COMPASS SEEMS TO BE BROKEN");
+  }
   serial->sendRequest("\n please point me north and type: '+'");
+  oneTimeUpdate();
   right_angles[Direction::NORTH] = getCurrentAngle();
+  serial->sendMsg("\n north =\t%f", right_angles[Direction::NORTH]);
 
   serial->sendRequest("\n please point me east and type '+'");
+  oneTimeUpdate();
   right_angles[Direction::EAST] = getCurrentAngle();
+  serial->sendMsg("\n east =\t%f", right_angles[Direction::EAST]);
 
   serial->sendRequest("\n please point me south and type '+'");
+  oneTimeUpdate();
   right_angles[Direction::SOUTH] = getCurrentAngle();
+  serial->sendMsg("\n south =\t%f", right_angles[Direction::SOUTH]);
 
   serial->sendRequest("\n please point me west and type '+'");
+  oneTimeUpdate();
   right_angles[Direction::WEST] = getCurrentAngle();
-  
+  serial->sendMsg("\n west =\t%f", right_angles[Direction::WEST]);
+
+  serial->sendRequest("\n please point me north again and type '+'");
 }
 
 double Compass::getRightAngle(int direction) {
@@ -58,6 +63,20 @@ double Compass::getRightAngle(int direction) {
   } else {
     return 0.0;
   }
+}
+
+void Compass::oneTimeUpdate() {
+  for(int i = 0; i < NUMBER_OF_INITIAL_SAMPLES; i++) {
+    update();
+  }
+}
+
+void Compass::update() {
+  double avg_angle = 0;
+  measure();
+  int16_t x = getX();
+  int16_t y = getY();
+  forcePush(angle_buffer, atan2(x, y) * 180 / PI);
 }
 
 Compass* Compass::getInstance() {
