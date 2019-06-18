@@ -1,13 +1,17 @@
 #ifndef ISA_STACK_H
 #define ISA_STACK_H
 
-class Stack {
+#include "PushPopContainer.h"
+
+class Stack : public PushPopContainer<int> {
 public:
     Stack();
 
-    void push(int value);
-    void pop();
+    virtual void push(int value);
+    virtual void pop();
     int peek();
+    virtual bool empty() const;
+    virtual bool full() const;
     int getSize();
 
 private:

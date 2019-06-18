@@ -39,17 +39,12 @@ void setup(void) {
 
 
 void loop(void) { 
-  if(Serial1.available()) {
-    serial->readFromBluetooth();
-    auto serial_buffer = serial->getBuffer();
+  // serial->sendMsg("\nangle=%f", compass->getCurrentAngle());
+  auto serial_buffer = serial->getBuffer();
+  if(serial_buffer) {
+    serial->clearBuffer();
     ai->handleBluetoothSerial(serial_buffer);
   }
-
-  else if(!Serial.available()) {
-    serial->clearBuffer();
-  }
-
-  // serial->sendMsg("\nangle=%f", compass->getCurrentAngle());
   
   auto driving_mode = ai->getDrivingMode();
   if (driving_mode == 0) {
@@ -59,4 +54,8 @@ void loop(void) {
   else if(driving_mode == 1 || driving_mode == -1) {
     ai->turn(driving_mode);
   }
+}
+
+void SerialEvent() {
+  serial->readFromBluetooth();
 }

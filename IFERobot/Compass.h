@@ -3,6 +3,8 @@
 
 #include "QMC5883.h"
 #include "SerialPort.h"
+#include "Queue.h"
+#include "Variables.h"
 
 struct Direction {
     enum {
@@ -21,10 +23,12 @@ public:
     void calibrateRightAngles();
     double getRightAngle(int direction);
 
+    void update();
     static Compass* getInstance();
 
 private:
     SerialPort* serial;
+    Queue<double, NUMBER_OF_INITIAL_SAMPLES> buffer;
     double right_angles[Direction::ALL];
 };
 

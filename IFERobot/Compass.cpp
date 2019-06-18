@@ -1,10 +1,11 @@
 #include "Compass.h"
+#include "Utils.h"
 #include "Variables.h"
 #include <math.h>
 #include <string>
 
 Compass::Compass()
-  : serial(SerialPort::getInstance()) {
+  : serial(SerialPort::getInstance()), buffer() {
   QMC5883::init();
   //hardcoded values
   right_angles[Direction::NORTH] = NORTH_DIR;
@@ -25,16 +26,7 @@ Compass::Compass()
 };
 
 double Compass::getCurrentAngle() {
-  double avg_angle = 0;
-  for (int i = 0; i < NUMBER_OF_INITIAL_SAMPLES; i++) {
-    measure();
-    int16_t x = getX();
-    int16_t y = getY();
-    avg_angle += (atan2(x, y) * 180 / PI);
-    //delay(10);
-  }
-
- return avg_angle / NUMBER_OF_INITIAL_SAMPLES;
+  return buffer.avg();
 }
 
 void Compass::calibrateRightAngles() {
@@ -66,6 +58,14 @@ double Compass::getRightAngle(int direction) {
   } else {
     return 0.0;
   }
+}
+
+void Compass::update() {
+  double avg_angle = 0;
+  measure();
+  int16_t x = getX();
+  int16_t y = getY();
+  forcePush(buffer, atan2(x, y) * 180 / PI);
 }
 
 Compass* Compass::getInstance() {

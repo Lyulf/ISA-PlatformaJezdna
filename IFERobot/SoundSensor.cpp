@@ -1,8 +1,8 @@
 #include "SoundSensor.h"
+#include "Utils.h"
 #include <Wire.h>
 
-SoundSensor::SoundSensor()
-  : distance_measured{0} { 
+SoundSensor::SoundSensor() { 
   ultrasound_trigger_pin[UltraSoundSensor::Front]	= US_FRONT_TRIGGER_PIN;
   ultrasound_trigger_pin[UltraSoundSensor::Back]	= US_BACK_TRIGGER_PIN;
   ultrasound_trigger_pin[UltraSoundSensor::Left]	= US_LEFT_TRIGGER_PIN;
@@ -39,59 +39,60 @@ int SoundSensor::measureSoundSpeed(int trigger_pin, int echo_pin)
   return distance;
 }
 
-int SoundSensor::getFrontDistance() {
-  // średnia krocząca z pomiarów dystansu z przodu
-  static int sum = 0;
-	static int d[5] = { 0 };
-	static int id = 0;
+int SoundSensor::getFrontDistance() const {
+  return front_buffer.avg();
+}
+
+int SoundSensor::getBackDistance() const {
+  return back_buffer.avg();
+}
+
+int SoundSensor::getLeftDistance() const {
+  return left_buffer.avg();
+}
+
+int SoundSensor::getRightDistance() const {
+  return right_buffer.avg();
+}
+
+void SoundSensor::update() {
+  updateFront();
+  updateBack();
+  updateLeft();
+  updateRight();
+}
+
+void SoundSensor::updateFront() {
     //zbieranie dystansu z przodu
   int dist = measureSoundSpeed(
                ultrasound_trigger_pin[UltraSoundSensor::Front],
                ultrasound_echo_pin[UltraSoundSensor::Front]);
 
-  sum -= d[id];
-  sum += d[id] = dist;
-  id = (id + 1) % 5;
-  dist = sum / 5;
-
-  return dist;
+  forcePush(front_buffer, dist);
 }
 
-int SoundSensor::getLeftDistance() {
-  // średnia krocząca z pomiarów dystansu z lewej strony
-  static int sum = 0;
-	static int d[5] = { 0 };
-	static int id = 0;
+void SoundSensor::updateBack() {
+    //zbieranie dystansu z tylu
+  int dist = measureSoundSpeed(
+               ultrasound_trigger_pin[UltraSoundSensor::Back],
+               ultrasound_echo_pin[UltraSoundSensor::Back]);
+  forcePush(back_buffer, dist);
+}
 
+void SoundSensor::updateLeft() {
   //zbieranie dystansu z lewej strony
   int dist = measureSoundSpeed(
                ultrasound_trigger_pin[UltraSoundSensor::Left],
                ultrasound_echo_pin[UltraSoundSensor::Left]);
-
-  sum -= d[id];
-  sum += d[id] = dist;
-  id = (id + 1) % 5;
-  dist = sum / 5;
-  return dist;
+  forcePush(left_buffer, dist);
 }
 
-int SoundSensor::getRightDistance() {
-  // średnia krocząca z pomiarów dystansu z prawej strony
-  static int sum = 0;
-	static int d[5] = { 0 };
-	static int id = 0;
-
+void SoundSensor::updateRight() {
   //zbieranie dystansu z prawej strony
   int dist = measureSoundSpeed(
                ultrasound_trigger_pin[UltraSoundSensor::Right],
                ultrasound_echo_pin[UltraSoundSensor::Right]);
-
-  sum -= d[id];
-  sum += d[id] = dist;
-  id = (id + 1) % 5;
-  dist = sum / 5;
-               
-  return dist;
+  forcePush(right_buffer, dist);
 }
 
 SoundSensor* SoundSensor::getInstance() {

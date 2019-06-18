@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <stdio.h>
 #include <utility>
+#include "Variables.h"
 
 class SerialPort {
     SerialPort();
@@ -33,8 +34,11 @@ public:
     static SerialPort* getInstance();
 
 private:
+    void finishReading();
+
     String serial_buffer;
-    char buffer[64];
+    char buffer[SERIAL_PORT_BUFFER_SIZE];
+    std::size_t buffer_pos;
 };
 
 #endif

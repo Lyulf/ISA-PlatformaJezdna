@@ -5,9 +5,8 @@ Stack::Stack()
     : size(0), data { 0 } { }
 
 void Stack::push(int value) {
-    if(size >= 256) {
+    if(full()) {
         auto serial = SerialPort::getInstance();
-        serial->sendMsg("KURWA CO");
         return;
     }
     data[size++] = value;
@@ -25,6 +24,14 @@ int Stack::peek() {
     } else {
         return 0;
     }
+}
+
+bool Stack::empty() const {
+    return size == 0;
+}
+
+bool Stack::full() const {
+    return size >= 256;
 }
 
 int Stack::getSize() {
