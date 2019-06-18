@@ -1,7 +1,7 @@
 #include "PathAI.h"
 #include "Utils.h"
 #include "Variables.h"
-#include <algorithm>
+#include <stdio.h>
 
 using DM = DrivingMode;
 

@@ -5,8 +5,9 @@
 #include <string>
 
 Compass::Compass()
-  : serial(SerialPort::getInstance()), buffer() {
+  : serial(SerialPort::getInstance()), angle_buffer() {
   QMC5883::init();
+  update();
   //hardcoded values
   right_angles[Direction::NORTH] = NORTH_DIR;
   right_angles[Direction::EAST] = EAST_DIR;
@@ -26,7 +27,7 @@ Compass::Compass()
 };
 
 double Compass::getCurrentAngle() {
-  return buffer.avg();
+  return angle_buffer.avg();
 }
 
 void Compass::calibrateRightAngles() {
@@ -34,18 +35,22 @@ void Compass::calibrateRightAngles() {
     serial->sendMsg("\n WARNING: THE COMPASS SEEMS TO BE BROKEN");
   }
   serial->sendRequest("\n please point me north and type: '+'");
+  oneTimeUpdate();
   right_angles[Direction::NORTH] = getCurrentAngle();
   serial->sendMsg("\n north =\t%f", right_angles[Direction::NORTH]);
 
   serial->sendRequest("\n please point me east and type '+'");
+  oneTimeUpdate();
   right_angles[Direction::EAST] = getCurrentAngle();
   serial->sendMsg("\n east =\t%f", right_angles[Direction::EAST]);
 
   serial->sendRequest("\n please point me south and type '+'");
+  oneTimeUpdate();
   right_angles[Direction::SOUTH] = getCurrentAngle();
   serial->sendMsg("\n south =\t%f", right_angles[Direction::SOUTH]);
 
   serial->sendRequest("\n please point me west and type '+'");
+  oneTimeUpdate();
   right_angles[Direction::WEST] = getCurrentAngle();
   serial->sendMsg("\n west =\t%f", right_angles[Direction::WEST]);
 
@@ -60,12 +65,18 @@ double Compass::getRightAngle(int direction) {
   }
 }
 
+void Compass::oneTimeUpdate() {
+  for(int i = 0; i < NUMBER_OF_INITIAL_SAMPLES; i++) {
+    update();
+  }
+}
+
 void Compass::update() {
   double avg_angle = 0;
   measure();
   int16_t x = getX();
   int16_t y = getY();
-  forcePush(buffer, atan2(x, y) * 180 / PI);
+  forcePush(angle_buffer, atan2(x, y) * 180 / PI);
 }
 
 Compass* Compass::getInstance() {

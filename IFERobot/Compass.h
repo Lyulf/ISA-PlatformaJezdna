@@ -24,11 +24,12 @@ public:
     double getRightAngle(int direction);
 
     void update();
+    void oneTimeUpdate();
     static Compass* getInstance();
 
 private:
     SerialPort* serial;
-    Queue<double, NUMBER_OF_INITIAL_SAMPLES> buffer;
+    Queue<double, NUMBER_OF_INITIAL_SAMPLES> angle_buffer;
     double right_angles[Direction::ALL];
 };
 

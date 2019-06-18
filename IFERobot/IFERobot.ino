@@ -43,6 +43,12 @@ void loop(void) {
   compass->update();
   sound_sensor->update();
 
+
+  if(Serial1.available()) { 
+    serial->sendMsg("\nA może jednak");
+    serial->readFromBluetooth();
+  }
+  
   auto serial_buffer = serial->getBuffer();
   if(serial_buffer) {
     serial->clearBuffer();
@@ -52,6 +58,5 @@ void loop(void) {
   ai->drive();
 }
 
-void SerialEvent() {
-  serial->readFromBluetooth();
+void serialEvent() {
 }
